@@ -135,11 +135,20 @@ def estimate_floor(
 
     x, y = _collect_points(masks, calib)
     if x.size < MIN_POINTS:
-        # No setup hold: fall back to the frames where the body sits lowest.
-        x, y = _collect_points(masks)
-        if x.size >= MIN_POINTS and calib is not None:
-            cutoff = np.percentile(y, 100.0 - calib_fallback_percentile)
-            keep = y >= cutoff
+        x, y = _collect_points(masks)          # no setup hold -- use everything
+
+    # Keep only the points plausibly *on* the floor: the lowest slice of the
+    # silhouette (largest y). This is not an optimisation, it is required for
+    # correctness. In a Dead Bug the limbs are deliberately in the air, so most
+    # columns never touch the ground; fitting to all of them drags the line up,
+    # and measuring inliers over all of them makes `inlier_ratio` count "how
+    # much of the body is on the floor" -- a quantity that is *anti*-correlated
+    # with correct form. The 0.80 QC gate would then reject exactly the clips
+    # it is meant to keep.
+    if x.size >= MIN_POINTS:
+        cutoff = np.percentile(y, 100.0 - calib_fallback_percentile)
+        keep = y >= cutoff
+        if keep.sum() >= MIN_POINTS:
             x, y = x[keep], y[keep]
 
     if x.size < MIN_POINTS:
