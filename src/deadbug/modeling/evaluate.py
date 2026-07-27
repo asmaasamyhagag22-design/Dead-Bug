@@ -64,6 +64,34 @@ def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return float(np.mean(np.asarray(y_true).ravel() == np.asarray(y_pred).ravel()))
 
 
+def balanced_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Mean per-class recall over the classes actually present in ``y_true``."""
+    cm, _ = confusion_matrix(y_true, y_pred, labels=np.unique(y_true))
+    actual = cm.sum(axis=1).astype(np.float64)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        recall = np.where(actual > 0, np.diag(cm) / actual, np.nan)
+    return float(np.nanmean(recall))
+
+
+def macro_f1_present(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Macro-F1 over the classes present in ``y_true`` only.
+
+    Why this exists alongside :func:`macro_f1`: these benchmarks use very small
+    subject-wise test folds that often do not contain every class. On
+    ``KERAAL_clf_mc_CTK`` a fold holds 13-14 samples of a 4-class problem, and
+    three of the six folds contain only two classes. Averaging over the union of
+    true and predicted labels then charges the model a zero for any class that
+    was never testable -- ``E2`` and ``E3`` appear in 4 and 6 test samples in
+    total across the whole dataset -- which caps the achievable score near 0.5
+    regardless of how good the model is.
+
+    Neither variant is "the" right answer, so report both and say which is which.
+    The union version is the stricter reading; this one measures performance on
+    what the fold could actually assess.
+    """
+    return macro_f1(y_true, y_pred, labels=np.unique(y_true))
+
+
 def wilson_interval(
     successes: int, n: int, alpha: float = 0.05
 ) -> tuple[float, float]:
@@ -186,11 +214,20 @@ def eval_folds(
     A large std is itself a finding: it measures how much the score depends on
     which subjects happened to be held out.
     """
-    per_fold, all_true, all_pred = [], [], []
+    METRICS = {
+        "macro_f1": macro_f1,
+        "macro_f1_present": macro_f1_present,
+        "balanced_accuracy": balanced_accuracy,
+        "accuracy": accuracy,
+    }
+
+    per_fold_metrics: dict[str, list[float]] = {k: [] for k in METRICS}
+    all_true, all_pred = [], []
     for fold in range(n_folds):
         x_tr, y_tr, x_te, y_te = load_fold(fold)
         y_hat = fit_predict(x_tr, y_tr, x_te)
-        per_fold.append(macro_f1(y_te, y_hat))
+        for name, fn in METRICS.items():
+            per_fold_metrics[name].append(fn(y_te, y_hat))
         all_true.append(np.asarray(y_te).ravel())
         all_pred.append(np.asarray(y_hat).ravel())
 
@@ -199,22 +236,48 @@ def eval_folds(
     cm, labels = confusion_matrix(y_true, y_pred)
     f1, _ = per_class_f1(y_true, y_pred, labels)
 
-    return {
-        "per_fold": per_fold,
-        "mean": float(np.mean(per_fold)),
-        "std": float(np.std(per_fold)),
+    out = {
+        "per_fold": per_fold_metrics["macro_f1"],
+        "mean": float(np.mean(per_fold_metrics["macro_f1"])),
+        "std": float(np.std(per_fold_metrics["macro_f1"])),
         "cm_pooled": cm,
         "labels": labels,
         "per_class_f1_pooled": f1,
         "n_folds": n_folds,
+        # Predictions are kept so any metric can be recomputed without retraining.
+        # Re-running LITEMV across both datasets costs ~80 minutes; recomputing a
+        # metric from stored predictions costs milliseconds, and the choice of
+        # metric is exactly the kind of thing that gets revised late.
+        "y_true": y_true,
+        "y_pred": y_pred,
+        "fold_sizes": [len(a) for a in all_true],
     }
+    for name, values in per_fold_metrics.items():
+        out[f"{name}_per_fold"] = values
+        out[f"{name}_mean"] = float(np.mean(values))
+        out[f"{name}_std"] = float(np.std(values))
+    return out
 
 
 def results_table(results: dict[str, dict]) -> str:
-    """Render the model ladder as a markdown table."""
-    lines = ["| model | macro-F1 (mean ± std) | per fold |",
-             "|---|---|---|"]
+    """Render the model ladder as a markdown table.
+
+    Four metrics, because on folds this small no single one is trustworthy
+    alone -- see :func:`macro_f1_present` for why the two macro-F1 columns can
+    differ so much.
+    """
+    lines = [
+        "| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |",
+        "|---|---|---|---|---|---|",
+    ]
     for name, r in results.items():
         folds = " ".join(f"{v:.3f}" for v in r["per_fold"])
-        lines.append(f"| {name} | {r['mean']:.3f} ± {r['std']:.3f} | {folds} |")
+        lines.append(
+            f"| {name} "
+            f"| {r['macro_f1_mean']:.3f} ± {r['macro_f1_std']:.3f} "
+            f"| {r['macro_f1_present_mean']:.3f} ± {r['macro_f1_present_std']:.3f} "
+            f"| {r['balanced_accuracy_mean']:.3f} ± {r['balanced_accuracy_std']:.3f} "
+            f"| {r['accuracy_mean']:.3f} ± {r['accuracy_std']:.3f} "
+            f"| {folds} |"
+        )
     return "\n".join(lines)

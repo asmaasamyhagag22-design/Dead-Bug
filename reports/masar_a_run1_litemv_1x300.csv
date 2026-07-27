@@ -1,0 +1,15 @@
+# Track A, run 1 -- 2026-07-27, ~100 min wall clock.
+# LITEMV ran at n_classifiers=1, n_epochs=300. Both are REDUCED from the aeon
+# defaults (5 and 1500) to fit the week, so this is NOT a faithful reproduction
+# of the published benchmark configuration and must not be quoted as one.
+# Only macro_f1 was computed on this run; the multi-metric columns and stored
+# predictions came later.
+dataset,model,macro_f1_mean,macro_f1_std,n_folds,per_fold,seconds
+KIMORE_clf_bn_Sq,majority,0.3620,0.0798,5,0.2222 0.4545 0.4000 0.4000 0.3333,178.4
+KIMORE_clf_bn_Sq,rf_flatten,0.3488,0.1219,5,0.1250 0.4000 0.3333 0.4000 0.4857,2.3
+KIMORE_clf_bn_Sq,rf_summary,0.4070,0.1337,5,0.2222 0.4545 0.3333 0.4000 0.6250,2.2
+KIMORE_clf_bn_Sq,litemv,0.5536,0.3265,5,0.2222 1.0000 0.1429 0.7778 0.6250,1286.2
+KERAAL_clf_mc_CTK,majority,0.3010,0.1444,6,0.2222 0.0889 0.1765 0.4167 0.4615 0.4400,665.6
+KERAAL_clf_mc_CTK,rf_flatten,0.4931,0.2487,6,0.5934 0.1961 0.1765 0.8444 0.7083 0.4400,4.6
+KERAAL_clf_mc_CTK,rf_summary,0.4397,0.2246,6,0.5412 0.1961 0.1765 0.8444 0.4400 0.4400,4.2
+KERAAL_clf_mc_CTK,litemv,0.4383,0.1928,6,0.5167 0.1852 0.1978 0.5758 0.7143 0.4400,3679.0

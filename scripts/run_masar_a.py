@@ -83,17 +83,37 @@ def write_reports(all_results: dict[str, dict[str, dict]], cfg: dict, sanity: bo
     figures.mkdir(parents=True, exist_ok=True)
     suffix = "_sanity" if sanity else ""
 
-    rows = ["dataset,model,macro_f1_mean,macro_f1_std,n_folds,per_fold,seconds"]
+    header = (
+        "dataset,model,macro_f1_mean,macro_f1_std,macro_f1_present_mean,"
+        "macro_f1_present_std,balanced_accuracy_mean,balanced_accuracy_std,"
+        "accuracy_mean,accuracy_std,n_folds,per_fold,seconds"
+    )
+    rows = [header]
     for dataset, results in all_results.items():
         for model, r in results.items():
             per_fold = " ".join(f"{v:.4f}" for v in r["per_fold"])
             rows.append(
-                f"{dataset},{model},{r['mean']:.4f},{r['std']:.4f},"
+                f"{dataset},{model},"
+                f"{r['macro_f1_mean']:.4f},{r['macro_f1_std']:.4f},"
+                f"{r['macro_f1_present_mean']:.4f},{r['macro_f1_present_std']:.4f},"
+                f"{r['balanced_accuracy_mean']:.4f},{r['balanced_accuracy_std']:.4f},"
+                f"{r['accuracy_mean']:.4f},{r['accuracy_std']:.4f},"
                 f"{r['n_folds']},{per_fold},{r.get('seconds', 0):.1f}"
             )
     csv_path = reports / f"masar_a_results{suffix}.csv"
     csv_path.write_text("\n".join(rows) + "\n", encoding="utf-8")
     print(f"\nwrote {csv_path}")
+
+    # Persist predictions so metrics can be revised without retraining.
+    preds = reports / f"masar_a_predictions{suffix}.npz"
+    payload = {}
+    for dataset, results in all_results.items():
+        for model, r in results.items():
+            payload[f"{dataset}__{model}__true"] = r["y_true"]
+            payload[f"{dataset}__{model}__pred"] = r["y_pred"]
+            payload[f"{dataset}__{model}__folds"] = np.asarray(r["fold_sizes"])
+    np.savez_compressed(preds, **payload)
+    print(f"wrote {preds}")
 
     md = ["# Track A -- Rehab-Pile model ladder", ""]
     if sanity:

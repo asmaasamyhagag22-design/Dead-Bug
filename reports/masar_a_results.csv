@@ -1,0 +1,4 @@
+dataset,model,macro_f1_mean,macro_f1_std,macro_f1_present_mean,macro_f1_present_std,balanced_accuracy_mean,balanced_accuracy_std,accuracy_mean,accuracy_std,n_folds,per_fold,seconds
+KERAAL_clf_mc_CTK,majority,0.3010,0.1444,0.3010,0.1444,0.4444,0.0786,0.5375,0.2733,6,0.2222 0.0889 0.1765 0.4167 0.4615 0.4400,2.9
+KERAAL_clf_mc_CTK,rf_flatten,0.4931,0.2487,0.4931,0.2487,0.5935,0.1793,0.6593,0.2604,6,0.5934 0.1961 0.1765 0.8444 0.7083 0.4400,6.3
+KERAAL_clf_mc_CTK,rf_summary,0.4397,0.2246,0.4397,0.2246,0.5412,0.1744,0.6355,0.2440,6,0.5412 0.1961 0.1765 0.8444 0.4400 0.4400,6.5
