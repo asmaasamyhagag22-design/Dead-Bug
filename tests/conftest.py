@@ -71,6 +71,37 @@ def base_pose() -> np.ndarray:
 
 
 @pytest.fixture
+def synth_geometry() -> dict:
+    """The constants the synthetic pose and mask are both built from.
+
+    The lumbar tests need these to compute the closed-form expected response,
+    so they live in one place rather than being restated per test.
+    """
+    return {
+        "hip_cx": HIP_CX,
+        "hip_cy": HIP_CY,
+        "torso_len": TORSO_LEN,
+        "half_hip_sep": HALF_HIP_SEP,
+        "floor_y": FLOOR_Y,
+        "mask_h": 400,
+        "mask_w": 640,
+        "body_top": 250.0,
+    }
+
+
+@pytest.fixture
+def scaled_pose():
+    """Callable ``(scale) -> (33, 4)``: the base pose at a different camera distance."""
+
+    def _make(scale: float = 1.0) -> np.ndarray:
+        k = _base_pose()
+        k[:, :2] *= scale
+        return k
+
+    return _make
+
+
+@pytest.fixture
 def synth_kpts33() -> np.ndarray:
     """``(T, 33, 4)`` of a supine subject performing alternating extensions.
 
