@@ -1,0 +1,265 @@
+project: deadbug-aqa
+seed: 0
+
+paths:
+  raw: data/raw
+  clips: data/clips
+  interim: data/interim
+  processed: data/processed
+  frames: data/processed/frames
+  reports: reports
+  preview: reports/preview
+  figures: reports/figures
+  logs: logs
+  clips_manifest: data/clips.csv
+  band: data/processed/normative_band.json
+  splits: data/processed/splits.json
+
+run:
+  force: false
+  manifest_name: _manifest.json
+
+logging:
+  level: INFO
+  dir: logs
+  per_clip_timing: true
+
+ingest:
+  # Never re-encode. Sources are 23.98/25/29.97/30 fps; carry the true fps,
+  # keep every temporal parameter in seconds, resample signals after extraction.
+  fps_policy: native
+  resample_signals_hz: 30.0
+  # REQUIRED. MediaPipe 0.10.35 hard-aborts the process inside
+  # segmentation_masks[0].numpy_view() when the frame width is not 4-byte
+  # aligned (width 1006 -> 4024 bytes/row). Snapping to a multiple of 16
+  # before inference removes the crash. Verified on data/clips.
+  snap_dims_to: 16
+  clip:
+    enabled: false          # sub-clipping is a seek in VideoSource, not ffmpeg
+  download:
+    enabled: false
+    queries_file: configs/queries.txt
+    max_duration_s: 400
+    max_height: 720
+    filename_template: "%(uploader)s__%(id)s.%(ext)s"
+  dedup:
+    exact_hash: md5
+    dhash_grid: [9, 8]
+    sample_every_s: 1.0     # seconds, not frames -- fps differs across clips
+    hamming_threshold: 8
+    match_frac_threshold: 0.85
+    subset_min_matched_s: 5.0
+
+pose:
+  backbone: mediapipe
+  variant: heavy
+  model_paths:
+    heavy: pose_landmarker_heavy.task
+    full: pose_landmarker_full.task
+    lite: pose_landmarker_lite.task
+  running_mode: VIDEO
+  num_poses: 1
+  output_segmentation_masks: true
+  min_pose_detection_confidence: 0.5
+  min_pose_presence_confidence: 0.5
+  min_tracking_confidence: 0.5
+  mask_binarize_threshold: 0.5
+  mask_downscale: 2
+  # Measured unnecessary: detection on supine clips is 90-100% with core-joint
+  # visibility ~0.999. Kept as an escape hatch only.
+  rotate_for_supine_deg: 0
+  write_preview: true
+  draw:
+    vis_threshold: 0.5
+    joint_radius: 3
+    bone_thickness: 2
+    bone_color_bgr: [0, 200, 120]
+    joint_color_bgr: [30, 60, 240]
+    mask_contour_color_bgr: [255, 160, 0]
+    canny_lo: 50
+    canny_hi: 150
+
+skeleton:
+  storage_layout: mp33
+  feature_layout: coco17
+  landmarks_mp33:
+    nose: 0
+    l_shoulder: 11
+    r_shoulder: 12
+    l_elbow: 13
+    r_elbow: 14
+    l_wrist: 15
+    r_wrist: 16
+    l_hip: 23
+    r_hip: 24
+    l_knee: 25
+    r_knee: 26
+    l_ankle: 27
+    r_ankle: 28
+
+geometry:
+  filters:
+    one_euro:
+      min_cutoff: 1.0
+      beta: 0.007
+      d_cutoff: 1.0
+    max_gap_frames: 5
+    visibility_threshold: 0.5
+  normalize:
+    torso_len_ref: median   # clip-level median; per-frame injects hip/shoulder jitter
+    align_axis: "+x"
+    min_torso_len_px: 20.0
+    tol_translation: 1.0e-6
+    tol_scale: 5.0e-2
+    tol_rotation: 1.0e-3
+  floor:
+    method: percentile      # percentile | ransac
+    percentile: 95
+    calib_static_frames: 30
+    static_disp_threshold_norm: 0.005
+    calib_fallback_percentile: 20
+    ransac_residual_threshold_px: 3.0
+    ransac_max_trials: 200
+    min_inlier_ratio: 0.80  # below this -> QC REJECT
+
+signals:
+  lumbar:
+    window_start_frac: 0.00
+    window_end_frac: 0.35
+    normalize_by: torso_len_px_sq
+    max_normalize_by: torso_len_px
+  ribcage:
+    window_start_frac: 0.45
+    window_end_frac: 0.75
+  rotation:
+    calib_frames: 30
+    # Never absolute: absolute hip separation IS view_score, so an absolute
+    # reading would just be measuring camera angle.
+    report_as: deviation_from_calib_median
+    use_z: true
+  smoothness:
+    sparc:
+      padlevel: 4
+      fc: 10.0
+      amp_th: 0.05
+    apply_to: [wrist, ankle]
+  geometric:
+    reference: shoulder_knee_line
+
+triage:
+  # REQUIRED. MediaPipe returns normalized [0,1] coords whose x and y have
+  # different pixel scales, so hip_sep/torso is distorted by the aspect ratio.
+  # Measured on one clip: 0.240 normalized vs 0.131 in pixels.
+  view_space: pixel
+  view_score_side_max: 0.12     # RECALIBRATE from the 0/30/45-degree footage
+  view_score_oblique_max: 0.21
+  min_detection_rate: 0.90
+  min_mask_coverage: 0.02
+  max_mask_coverage: 0.60
+  max_torso_len_cv: 0.10
+
+segment:
+  signal_pairs_mp33:
+    R: [16, 27]           # right wrist <-> left ankle
+    L: [15, 28]           # left wrist  <-> right ankle
+  smooth_with_one_euro: true
+  min_distance_s: 0.8
+  prominence_frac: 0.25   # 0.25 * (p95 - p05)
+  prominence_floor: 0.02
+  percentile_lo: 5
+  percentile_hi: 95
+  dwell_amplitude_frac: 0.05
+  min_reps_per_clip: 4
+  expect_alternation: true
+  count_error_tolerance: 0.02   # Gate 3
+
+dataset:
+  resample_frames: 32
+  keep_unresampled: true        # resampling destroys the duration info timing features need
+  phase_bins: 32
+  excursion_bins: 20
+  parquet_engine: pyarrow
+  csv_fallback: true
+  band:
+    conditions: [correct]
+    views: [side]
+    z_threshold: 2.0
+    stats: [mean, std, p05, p95]
+  control_limit:
+    sigma: 2.0
+    calib_excursion_frac: 0.20
+  splits:
+    scheme: loso
+    group_key: person_id
+    stratify_key: condition
+    leakage_sanity_check: true
+
+features:
+  layout: coco17
+  n_joints: 17
+  n_bones: 16
+  streams: [joints, bones, velocity, angles, lumbar]
+  dim: 109                # 34 + 32 + 34 + 8 + 1
+  angle_units: radians
+  # COCO-17 (a, vertex, c). Strictly bilaterally symmetric in four mirror
+  # pairs so ANGLE_FLIP_PAIRS = [(0,1),(2,3),(4,5),(6,7)] is well defined.
+  angle_triplets:
+    - [6, 8, 10]          # 0 R elbow
+    - [5, 7, 9]           # 1 L elbow
+    - [12, 6, 8]          # 2 R shoulder
+    - [11, 5, 7]          # 3 L shoulder
+    - [6, 12, 14]         # 4 R hip
+    - [5, 11, 13]         # 5 L hip
+    - [12, 14, 16]        # 6 R knee
+    - [11, 13, 15]        # 7 L knee
+
+qc:
+  min_detection_rate: 0.95          # flag
+  min_mean_visibility_core: 0.70    # mp33 joints 11,12,23,24 -- flag
+  min_floor_inlier_ratio: 0.80      # REJECT
+  min_rep_count: 4                  # REJECT
+  max_torso_len_cv: 0.10            # flag
+  require_alternation: true         # flag
+  csv_out: reports/qc.csv
+  html_out: reports/qc.html
+
+masar_a:
+  venv: venv-a
+  datasets: [KIMORE_clf_bn_Sq, KERAAL_clf_mc_CTK]
+  n_folds:
+    KIMORE_clf_bn_Sq: 5
+    KERAAL_clf_mc_CTK: 6
+  models: [majority, rf_flatten, rf_summary, litemv]
+  metric: macro_f1
+  report_as: mean_std_over_folds
+  extract_path: data/rehabpile
+  rf:
+    n_estimators: 300
+    n_jobs: -1
+    random_state: 0
+  litemv:
+    use_litemv: true      # mandatory for multivariate skeleton data
+    n_classifiers: 1
+    n_epochs: 300         # default 1500 is far too slow for this week
+    batch_size: 64
+    random_state: 0
+    verbose: false
+  sanity:
+    fold: 0
+    n_epochs: 50
+
+augment:
+  enabled: false
+  space: pixel            # flip BEFORE normalize -- one correct flip formula
+  mirror_p: 0.5
+  temporal_warp: 0.20
+  rotation_deg: 10.0
+  gaussian_noise_sigma: 0.01
+  joint_dropout_p: 0.05
+
+modeling:
+  loss: focal
+  focal_gamma: 2.0
+  class_weight: inverse_frequency
+  seeds: [0, 1, 2]
+  early_stopping_patience: 30

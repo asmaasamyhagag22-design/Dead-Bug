@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deadbug-aqa"
+version = "0.1.0"
+description = "Skeleton-based Action Quality Assessment for the Dead Bug exercise"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "opencv-python",
+    "mediapipe",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "pyyaml",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+parquet = ["pyarrow"]
+
+[project.scripts]
+deadbug = "deadbug.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# pythonpath makes `from deadbug import ...` resolve from the repo root with no
+# install step -- pytest picks src/ up directly.
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
