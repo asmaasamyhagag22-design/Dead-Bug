@@ -2,8 +2,6 @@
 
 Skeleton- and silhouette-based **Action Quality Assessment** for the Dead Bug core-stability exercise.
 
-> 📄 **[PROCESS.md](PROCESS.md) — الوثيقة الكاملة**: ليه المشروع اتعمل، كل مشكلة تقنية واتحلت إزاي، والنتائج المقاسة.
-
 ---
 
 ## The problem this solves
