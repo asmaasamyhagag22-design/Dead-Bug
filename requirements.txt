@@ -1,0 +1,16 @@
+# Track B (main venv): pose extraction, signals, segmentation.
+# Verified on Python 3.13.5 / Windows.
+mediapipe>=0.10.35
+opencv-python>=4.10
+numpy>=2.0
+scipy>=1.11
+pandas>=2.0
+matplotlib>=3.8
+PyYAML>=6.0
+tqdm>=4.66
+pytest>=8.0
+pyarrow>=15.0          # reps.parquet; pandas has no parquet engine without it
+
+# Track A lives in a SEPARATE environment (venv-a) -- see requirements-a.txt.
+# aeon pins numpy<2.5, pandas<2.4, scipy<1.18, all below what MediaPipe uses
+# here, so installing it into this venv would downgrade a working stack.

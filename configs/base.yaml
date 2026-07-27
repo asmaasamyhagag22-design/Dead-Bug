@@ -244,6 +244,7 @@ masar_a:
     batch_size: 64
     random_state: 0
     verbose: false
+    file_path: models/    # aeon defaults to './' and litters the repo root
   sanity:
     fold: 0
     n_epochs: 50

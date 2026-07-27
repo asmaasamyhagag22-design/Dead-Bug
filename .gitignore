@@ -14,5 +14,10 @@ reports/preview/
 logs/
 .ipynb_checkpoints/
 models/*.pt
+# aeon's LITETimeClassifier writes a checkpoint per fit into file_path
+# (config pins it to models/, but stray ones have landed in the root before)
+*.keras
+*.hdf5
+data/rehabpile/
 !data/clips.csv
 !data/processed/

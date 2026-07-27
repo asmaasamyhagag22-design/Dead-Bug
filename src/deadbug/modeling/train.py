@@ -38,7 +38,8 @@ def fit_predict_rf_summary(
 def fit_predict_litemv(
     x_tr: np.ndarray, y_tr: np.ndarray, x_te: np.ndarray,
     use_litemv: bool = True, n_classifiers: int = 1, n_epochs: int = 300,
-    batch_size: int = 64, random_state: int = 0, verbose: bool = False, **_,
+    batch_size: int = 64, random_state: int = 0, verbose: bool = False,
+    file_path: str = "models/", **_,
 ) -> np.ndarray:
     """LITEMV -- ~10k parameters, built for exactly this sample size.
 
@@ -50,7 +51,13 @@ def fit_predict_litemv(
     TensorFlow is missing. A module-level import would make this whole file
     unimportable without TF and take the sklearn baselines down with it.
     """
+    from pathlib import Path
+
     from aeon.classification.deep_learning import LITETimeClassifier
+
+    # aeon writes a checkpoint per fit into file_path, which defaults to './'
+    # and scatters .keras files through the repo root.
+    Path(file_path).mkdir(parents=True, exist_ok=True)
 
     model = LITETimeClassifier(
         use_litemv=use_litemv,
@@ -59,6 +66,7 @@ def fit_predict_litemv(
         batch_size=batch_size,
         random_state=random_state,
         verbose=verbose,
+        file_path=file_path,
     )
     model.fit(x_tr, y_tr)
     return model.predict(x_te)

@@ -1,0 +1,20 @@
+# Track A (venv-a): Rehab-Pile benchmark, LITEMV.
+#
+#   uv venv venv-a --python 3.13
+#   uv pip install --python venv-a -r requirements-a.txt
+#
+# Pin aeon EXPLICITLY. Constraining numpy instead (e.g. "numpy<2.5") lets the
+# resolver pick numpy 2.4.x, which numba rejects; rather than backtrack numpy it
+# installs aeon==0.0.0 -- an empty placeholder package on PyPI -- and the install
+# SUCCEEDS with exit code 0. `import aeon` then fails. Pinning the real version
+# lets the resolver bring numpy down to 2.3.5 on its own.
+aeon==1.5.0
+tensorflow>=2.20        # cp313 wheels exist from 2.20; builds Keras objects in __init__
+keras>=3.6
+matplotlib>=3.8
+pyarrow>=15.0
+PyYAML>=6.0
+
+# Resolved and verified working together:
+#   aeon 1.5.0 · tensorflow 2.21.0 · keras 3.15.0
+#   numpy 2.3.5 · scipy 1.17.1 · pandas 2.3.3 · scikit-learn 1.8.0
