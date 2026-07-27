@@ -182,12 +182,14 @@ def main() -> int:
         res = run_dataset(name, cfg, models, args.folds, args.sanity)
         if res:
             all_results[name] = res
+            # Write after EVERY dataset, not once at the end. A long multi-dataset
+            # run that dies partway (OOM, a killed terminal) would otherwise throw
+            # away hours of finished work that only ever existed in memory.
+            write_reports(all_results, cfg, args.sanity)
 
     if not all_results:
         print("\nno results -- every model failed", file=sys.stderr)
         return 1
-
-    write_reports(all_results, cfg, args.sanity)
     return 0
 
 

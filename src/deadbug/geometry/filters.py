@@ -72,31 +72,51 @@ class OneEuroFilter:
         return float(x_hat)
 
 
+def _one_euro_pass(
+    flat: np.ndarray, fps: float, min_cutoff: float, beta: float, d_cutoff: float
+) -> np.ndarray:
+    out = np.empty_like(flat)
+    for c in range(flat.shape[1]):
+        f = OneEuroFilter(fps, min_cutoff, beta, d_cutoff)
+        for t, value in enumerate(flat[:, c]):
+            if np.isnan(value):
+                out[t, c] = np.nan
+                f.reset()
+            else:
+                out[t, c] = f(value)
+    return out
+
+
 def one_euro_array(
     x: np.ndarray,
     fps: float,
     min_cutoff: float = 1.0,
     beta: float = 0.007,
     d_cutoff: float = 1.0,
+    zero_phase: bool = False,
 ) -> np.ndarray:
     """Filter along axis 0, independently per trailing coordinate.
 
     NaNs pass through as NaN and do not corrupt the filter state, so a dropped
     detection leaves a hole rather than a smear.
+
+    Args:
+        zero_phase: run the filter forwards then backwards, cancelling its phase
+            lag. One Euro is causal by design -- it was built for real-time
+            interaction, where looking ahead is impossible -- and a causal filter
+            necessarily delays the signal. Measured on a 2-second rep that delay
+            is ~4 frames, and it biases **every** rep boundary in the same
+            direction. This pipeline is offline batch processing, so there is no
+            reason to accept that bias: use ``zero_phase=True`` wherever the
+            *timing* of an event matters (segmentation), and leave it off for
+            plain keypoint smoothing.
     """
     arr = np.asarray(x, dtype=np.float64)
     flat = arr.reshape(arr.shape[0], -1)
-    out = np.empty_like(flat)
 
-    for c in range(flat.shape[1]):
-        f = OneEuroFilter(fps, min_cutoff, beta, d_cutoff)
-        series = flat[:, c]
-        for t, value in enumerate(series):
-            if np.isnan(value):
-                out[t, c] = np.nan
-                f.reset()
-            else:
-                out[t, c] = f(value)
+    out = _one_euro_pass(flat, fps, min_cutoff, beta, d_cutoff)
+    if zero_phase:
+        out = _one_euro_pass(out[::-1], fps, min_cutoff, beta, d_cutoff)[::-1]
     return out.reshape(arr.shape)
 
 
