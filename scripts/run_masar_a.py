@@ -277,9 +277,13 @@ def main() -> int:
     ap.add_argument("--folds", type=int, help="cap the fold count (debugging only)")
     ap.add_argument("--sanity", action="store_true", help="1 fold, reduced epochs")
     ap.add_argument("--fresh", action="store_true", help="ignore previous results")
+    ap.add_argument("--litemv-classifiers", type=int,
+                    help="override the ensemble size (cost scales linearly)")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
+    if args.litemv_classifiers:
+        cfg["masar_a"]["litemv"]["n_classifiers"] = args.litemv_classifiers
     seed_everything(cfg_get(cfg, "seed"))
     rehabpile.ensure_registry()
 

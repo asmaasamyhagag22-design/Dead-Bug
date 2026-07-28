@@ -1,13 +1,14 @@
 # Track A -- Rehab-Pile benchmark
 
-## Headline: mean rank over 14 datasets
+## Headline: mean rank over 39 datasets
 
 | model | mean rank | wins | mean macro_f1_mean | median | datasets |
 |---|---|---|---|---|---|
-| minirocket | **1.79** | 8 | 0.610 | 0.614 | 14 |
-| rf_summary | **2.14** | 4 | 0.542 | 0.587 | 14 |
-| rf_flatten | **2.68** | 2 | 0.477 | 0.510 | 14 |
-| majority | **3.39** | 1 | 0.368 | 0.341 | 14 |
+| minirocket | **1.63** | 25 | 0.684 | 0.670 | 39 |
+| litemv | **2.00** | 0 | 0.592 | 0.592 | 1 |
+| rf_summary | **2.14** | 12 | 0.610 | 0.583 | 39 |
+| rf_flatten | **2.73** | 6 | 0.528 | 0.535 | 39 |
+| majority | **3.58** | 4 | 0.379 | 0.333 | 39 |
 
 Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold score can swing on sampling alone, and averaging raw scores would let a dataset where everything scores 0.9 outweigh one where everything scores 0.4. Ranking is the standard presentation in the time-series-classification literature for exactly this reason. `wins` counts datasets where a model tied or took the top score.
 
@@ -15,12 +16,15 @@ Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold scor
 
 ## Per collection
 
-| family | n | majority | minirocket | rf_flatten | rf_summary |
-|---|---|---|---|---|---|
-| IRDS | 1 | 0.436 | 0.615 | 0.236 | 0.330 |
-| KERAAL | 6 | 0.431 | 0.554 | 0.446 | 0.566 |
-| KIMORE | 5 | 0.392 | 0.614 | 0.505 | 0.530 |
-| UCDHE | 2 | 0.084 | 0.765 | 0.621 | 0.610 |
+| family | n | litemv | majority | minirocket | rf_flatten | rf_summary |
+|---|---|---|---|---|---|---|
+| IRDS | 9 | -- | 0.406 | 0.652 | 0.461 | 0.497 |
+| KERAAL | 6 | -- | 0.431 | 0.554 | 0.446 | 0.566 |
+| KIMORE | 5 | 0.592 | 0.392 | 0.614 | 0.505 | 0.530 |
+| KINECAL | 4 | -- | 0.480 | 0.500 | 0.480 | 0.480 |
+| SPHERE | 1 | -- | 0.311 | 0.846 | 0.555 | 0.715 |
+| UCDHE | 4 | -- | 0.259 | 0.744 | 0.602 | 0.586 |
+| UIPRMD | 10 | -- | 0.333 | 0.858 | 0.636 | 0.832 |
 
 ## Per dataset
 
@@ -33,22 +37,14 @@ Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold scor
 | rf_summary | 0.607 ± 0.323 | 0.607 ± 0.323 | 0.700 ± 0.245 | 0.719 ± 0.242 | 0.300 1.000 0.400 0.333 1.000 |
 | minirocket | 0.610 ± 0.222 | 0.701 ± 0.232 | 0.717 ± 0.194 | 0.743 ± 0.167 | 0.708 0.455 0.400 0.486 1.000 |
 
-Pooled per-class F1 for `minirocket`: 0=0.429, 1=0.833
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
-
 ## KIMORE_clf_bn_LT
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
 | majority | 0.289 ± 0.074 | 0.289 ± 0.074 | 0.500 ± 0.000 | 0.419 ± 0.129 | 0.300 0.333 0.333 0.143 0.333 |
-| rf_flatten | 0.352 ± 0.225 | 0.352 ± 0.225 | 0.467 ± 0.194 | 0.390 ± 0.230 | 0.222 0.625 0.143 0.143 0.625 |
+| rf_flatten | 0.352 ± 0.225 | 0.352 ± 0.225 | 0.467 ± 0.194 | 0.391 ± 0.230 | 0.222 0.625 0.143 0.143 0.625 |
 | rf_summary | 0.457 ± 0.158 | 0.457 ± 0.158 | 0.573 ± 0.139 | 0.519 ± 0.132 | 0.300 0.625 0.250 0.486 0.625 |
 | minirocket | 0.420 ± 0.227 | 0.420 ± 0.227 | 0.435 ± 0.214 | 0.476 ± 0.205 | 0.708 0.667 0.143 0.333 0.250 |
-
-Pooled per-class F1 for `rf_summary`: 0=0.348, 1=0.615
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## KIMORE_clf_bn_PR
 
@@ -59,48 +55,33 @@ The reported number is the **mean over folds with its standard deviation**. The 
 | rf_summary | 0.632 ± 0.271 | 0.632 ± 0.271 | 0.690 ± 0.269 | 0.652 ± 0.247 | 0.417 0.829 0.250 0.667 1.000 |
 | minirocket | 0.678 ± 0.109 | 0.678 ± 0.109 | 0.755 ± 0.102 | 0.714 ± 0.103 | 0.533 0.829 0.778 0.625 0.625 |
 
-Pooled per-class F1 for `minirocket`: 0=0.780, 1=0.571
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
-
 ## KIMORE_clf_bn_Sq
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
-| majority | 0.362 ± 0.080 | 0.362 ± 0.080 | 0.500 ± 0.000 | 0.590 ± 0.185 | 0.222 0.455 0.400 0.400 0.333 |
-| rf_flatten | 0.407 ± 0.134 | 0.407 ± 0.134 | 0.508 ± 0.093 | 0.590 ± 0.185 | 0.222 0.455 0.333 0.400 0.625 |
+| majority | 0.362 ± 0.080 | 0.362 ± 0.080 | 0.500 ± 0.000 | 0.591 ± 0.185 | 0.222 0.455 0.400 0.400 0.333 |
+| rf_flatten | 0.407 ± 0.134 | 0.407 ± 0.134 | 0.508 ± 0.093 | 0.591 ± 0.185 | 0.222 0.455 0.333 0.400 0.625 |
 | rf_summary | 0.369 ± 0.171 | 0.369 ± 0.171 | 0.458 ± 0.179 | 0.524 ± 0.253 | 0.222 0.455 0.143 0.400 0.625 |
 | minirocket | 0.703 ± 0.068 | 0.703 ± 0.068 | 0.748 ± 0.098 | 0.743 ± 0.076 | 0.708 0.778 0.778 0.625 0.625 |
-
-Pooled per-class F1 for `minirocket`: 0=0.636, 1=0.800
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
+| litemv | 0.592 ± 0.285 | 0.592 ± 0.285 | 0.658 ± 0.215 | 0.624 ± 0.278 | 0.222 1.000 0.333 0.778 0.625 |
 
 ## KIMORE_clf_bn_TR
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
 | majority | 0.465 ± 0.288 | 0.465 ± 0.288 | 0.600 ± 0.200 | 0.629 ± 0.275 | 0.125 0.400 0.400 0.400 1.000 |
-| rf_flatten | 0.527 ± 0.317 | 0.527 ± 0.317 | 0.625 ± 0.224 | 0.629 ± 0.295 | 0.125 0.333 0.400 0.778 1.000 |
-| rf_summary | 0.583 ± 0.279 | 0.583 ± 0.279 | 0.692 ± 0.207 | 0.690 ± 0.237 | 0.286 0.829 0.400 0.400 1.000 |
+| rf_flatten | 0.527 ± 0.317 | 0.527 ± 0.317 | 0.625 ± 0.224 | 0.629 ± 0.294 | 0.125 0.333 0.400 0.778 1.000 |
+| rf_summary | 0.583 ± 0.279 | 0.583 ± 0.279 | 0.692 ± 0.207 | 0.691 ± 0.237 | 0.286 0.829 0.400 0.400 1.000 |
 | minirocket | 0.661 ± 0.346 | 0.741 ± 0.322 | 0.783 ± 0.194 | 0.729 ± 0.318 | 0.125 1.000 0.778 1.000 0.400 |
-
-Pooled per-class F1 for `minirocket`: 0=0.526, 1=0.791
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## KERAAL_clf_mc_CTK
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
-| majority | 0.301 ± 0.144 | 0.301 ± 0.144 | 0.444 ± 0.079 | 0.538 ± 0.273 | 0.222 0.089 0.176 0.417 0.462 0.440 |
+| majority | 0.301 ± 0.144 | 0.301 ± 0.144 | 0.444 ± 0.079 | 0.537 ± 0.273 | 0.222 0.089 0.176 0.417 0.462 0.440 |
 | rf_flatten | 0.492 ± 0.236 | 0.492 ± 0.236 | 0.593 ± 0.168 | 0.659 ± 0.264 | 0.644 0.208 0.176 0.775 0.708 0.440 |
 | rf_summary | 0.429 ± 0.194 | 0.429 ± 0.194 | 0.520 ± 0.133 | 0.624 ± 0.234 | 0.541 0.222 0.176 0.754 0.440 0.440 |
-| minirocket | 0.428 ± 0.191 | 0.462 ± 0.189 | 0.523 ± 0.169 | 0.636 ± 0.274 | 0.462 0.343 0.107 0.754 0.462 0.440 |
-
-Pooled per-class F1 for `rf_flatten`: C=0.765, E1=0.593, E2=0.000, E3=0.000
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
+| minirocket | 0.428 ± 0.191 | 0.463 ± 0.189 | 0.523 ± 0.169 | 0.635 ± 0.274 | 0.462 0.343 0.107 0.754 0.462 0.440 |
 
 ## KERAAL_clf_mc_ELK
 
@@ -108,64 +89,44 @@ The reported number is the **mean over folds with its standard deviation**. The 
 |---|---|---|---|---|---|
 | majority | 0.591 ± 0.309 | 0.591 ± 0.309 | 0.667 ± 0.236 | 0.798 ± 0.284 | 1.000 0.467 0.444 0.481 1.000 0.154 |
 | rf_flatten | 0.535 ± 0.209 | 0.609 ± 0.238 | 0.636 ± 0.207 | 0.770 ± 0.175 | 1.000 0.429 0.412 0.481 0.440 0.450 |
-| rf_summary | 0.645 ± 0.253 | 0.645 ± 0.253 | 0.687 ± 0.240 | 0.830 ± 0.162 | 1.000 0.467 0.412 0.462 1.000 0.530 |
+| rf_summary | 0.645 ± 0.253 | 0.645 ± 0.253 | 0.687 ± 0.240 | 0.830 ± 0.163 | 1.000 0.467 0.412 0.462 1.000 0.530 |
 | minirocket | 0.479 ± 0.262 | 0.571 ± 0.304 | 0.617 ± 0.254 | 0.724 ± 0.289 | 0.481 0.467 0.333 0.462 1.000 0.133 |
-
-Pooled per-class F1 for `rf_summary`: C=0.421, E2=0.911
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## KERAAL_clf_mc_RTK
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
-| majority | 0.488 ± 0.386 | 0.488 ± 0.386 | 0.556 ± 0.356 | 0.600 ± 0.363 | 0.300 1.000 0.000 1.000 0.185 0.440 |
-| rf_flatten | 0.262 ± 0.132 | 0.434 ± 0.270 | 0.430 ± 0.237 | 0.459 ± 0.235 | 0.211 0.467 0.100 0.316 0.118 0.364 |
-| rf_summary | 0.599 ± 0.218 | 0.742 ± 0.203 | 0.720 ± 0.183 | 0.809 ± 0.115 | 0.775 0.385 0.471 1.000 0.525 0.440 |
+| majority | 0.487 ± 0.386 | 0.487 ± 0.386 | 0.556 ± 0.356 | 0.600 ± 0.363 | 0.300 1.000 0.000 1.000 0.185 0.440 |
+| rf_flatten | 0.262 ± 0.132 | 0.433 ± 0.270 | 0.430 ± 0.237 | 0.459 ± 0.235 | 0.210 0.467 0.100 0.316 0.118 0.364 |
+| rf_summary | 0.599 ± 0.218 | 0.742 ± 0.203 | 0.720 ± 0.183 | 0.809 ± 0.115 | 0.775 0.385 0.471 1.000 0.524 0.440 |
 | minirocket | 0.799 ± 0.305 | 0.799 ± 0.305 | 0.812 ± 0.271 | 0.849 ± 0.248 | 0.928 1.000 1.000 1.000 0.157 0.708 |
-
-Pooled per-class F1 for `minirocket`: C=0.875, E1=0.000, E2=0.756
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## UCDHE_clf_mc_MP
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
-| majority | 0.100 ± 0.001 | 0.100 ± 0.001 | 0.250 ± 0.000 | 0.250 ± 0.004 | 0.101 0.102 0.099 0.099 0.099 |
-| rf_flatten | 0.585 ± 0.061 | 0.585 ± 0.061 | 0.592 ± 0.060 | 0.594 ± 0.061 | 0.565 0.542 0.623 0.513 0.682 |
-| rf_summary | 0.496 ± 0.040 | 0.496 ± 0.040 | 0.509 ± 0.033 | 0.510 ± 0.035 | 0.452 0.472 0.564 0.477 0.515 |
+| majority | 0.100 ± 0.001 | 0.100 ± 0.001 | 0.250 ± 0.000 | 0.251 ± 0.004 | 0.101 0.102 0.099 0.099 0.099 |
+| rf_flatten | 0.585 ± 0.061 | 0.585 ± 0.061 | 0.593 ± 0.060 | 0.594 ± 0.061 | 0.565 0.542 0.623 0.513 0.682 |
+| rf_summary | 0.496 ± 0.040 | 0.496 ± 0.040 | 0.509 ± 0.034 | 0.510 ± 0.035 | 0.452 0.472 0.564 0.477 0.515 |
 | minirocket | 0.798 ± 0.018 | 0.798 ± 0.018 | 0.797 ± 0.016 | 0.798 ± 0.016 | 0.813 0.778 0.805 0.774 0.819 |
-
-Pooled per-class F1 for `minirocket`: a=0.882, arch=0.752, n=0.728, r=0.841
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## UCDHE_clf_mc_Rowing
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
-| majority | 0.067 ± 0.002 | 0.067 ± 0.002 | 0.200 ± 0.000 | 0.202 ± 0.008 | 0.068 0.067 0.063 0.068 0.070 |
-| rf_flatten | 0.657 ± 0.052 | 0.657 ± 0.052 | 0.660 ± 0.052 | 0.657 ± 0.051 | 0.693 0.652 0.693 0.689 0.559 |
+| majority | 0.067 ± 0.002 | 0.067 ± 0.002 | 0.200 ± 0.000 | 0.202 ± 0.008 | 0.068 0.067 0.064 0.068 0.070 |
+| rf_flatten | 0.657 ± 0.051 | 0.657 ± 0.051 | 0.660 ± 0.052 | 0.657 ± 0.051 | 0.693 0.652 0.693 0.689 0.559 |
 | rf_summary | 0.724 ± 0.042 | 0.724 ± 0.042 | 0.726 ± 0.046 | 0.721 ± 0.046 | 0.760 0.773 0.724 0.710 0.653 |
 | minirocket | 0.732 ± 0.035 | 0.732 ± 0.035 | 0.733 ± 0.037 | 0.727 ± 0.037 | 0.763 0.786 0.707 0.707 0.699 |
-
-Pooled per-class F1 for `minirocket`: a=0.719, ext=0.966, n=0.528, r=0.684, rb=0.766
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## KERAAL_clf_bn_CTK
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
-| majority | 0.293 ± 0.127 | 0.293 ± 0.127 | 0.500 ± 0.000 | 0.462 ± 0.273 | 0.333 0.458 0.440 0.222 0.125 0.176 |
-| rf_flatten | 0.559 ± 0.238 | 0.559 ± 0.238 | 0.647 ± 0.170 | 0.712 ± 0.229 | 0.857 0.458 0.176 0.844 0.576 0.440 |
+| majority | 0.293 ± 0.127 | 0.293 ± 0.127 | 0.500 ± 0.000 | 0.463 ± 0.273 | 0.333 0.458 0.440 0.222 0.125 0.176 |
+| rf_flatten | 0.559 ± 0.238 | 0.559 ± 0.238 | 0.647 ± 0.170 | 0.713 ± 0.229 | 0.857 0.458 0.176 0.844 0.576 0.440 |
 | rf_summary | 0.400 ± 0.165 | 0.400 ± 0.165 | 0.477 ± 0.117 | 0.578 ± 0.209 | 0.300 0.350 0.176 0.714 0.417 0.440 |
 | minirocket | 0.525 ± 0.190 | 0.525 ± 0.190 | 0.596 ± 0.122 | 0.681 ± 0.215 | 0.854 0.226 0.576 0.591 0.462 0.440 |
-
-Pooled per-class F1 for `rf_flatten`: C=0.755, E=0.647
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## KERAAL_clf_bn_ELK
 
@@ -176,22 +137,14 @@ The reported number is the **mean over folds with its standard deviation**. The 
 | rf_summary | 0.591 ± 0.309 | 0.591 ± 0.309 | 0.667 ± 0.236 | 0.798 ± 0.284 | 1.000 0.467 0.444 0.481 1.000 0.154 |
 | minirocket | 0.479 ± 0.258 | 0.553 ± 0.296 | 0.600 ± 0.226 | 0.712 ± 0.285 | 0.440 0.467 0.333 0.481 1.000 0.154 |
 
-Pooled per-class F1 for `majority`: C=0.000, E=0.899
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
-
 ## KERAAL_clf_bn_RTK
 
 | model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
 |---|---|---|---|---|---|
 | majority | 0.320 ± 0.340 | 0.320 ± 0.340 | 0.417 ± 0.344 | 0.400 ± 0.363 | 0.364 0.000 1.000 0.000 0.381 0.176 |
 | rf_flatten | 0.339 ± 0.143 | 0.464 ± 0.141 | 0.435 ± 0.150 | 0.414 ± 0.135 | 0.626 0.333 0.182 0.235 0.278 0.378 |
-| rf_summary | 0.732 ± 0.221 | 0.796 ± 0.157 | 0.771 ± 0.170 | 0.803 ± 0.147 | 0.754 0.385 1.000 1.000 0.675 0.576 |
+| rf_summary | 0.732 ± 0.221 | 0.796 ± 0.158 | 0.771 ± 0.170 | 0.803 ± 0.147 | 0.754 0.385 1.000 1.000 0.675 0.576 |
 | minirocket | 0.612 ± 0.232 | 0.770 ± 0.245 | 0.775 ± 0.208 | 0.768 ± 0.225 | 0.785 0.467 1.000 0.480 0.291 0.650 |
-
-Pooled per-class F1 for `rf_summary`: C=0.825, E=0.774
-
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## IRDS_clf_bn_EFL
 
@@ -202,6 +155,227 @@ The reported number is the **mean over folds with its standard deviation**. The 
 | rf_summary | 0.330 ± 0.174 | 0.424 ± 0.304 | 0.478 ± 0.282 | 0.577 ± 0.325 | 0.447 0.309 0.000 0.471 0.424 |
 | minirocket | 0.615 ± 0.289 | 0.763 ± 0.236 | 0.726 ± 0.247 | 0.788 ± 0.230 | 0.914 1.000 0.267 0.471 0.424 |
 
-Pooled per-class F1 for `minirocket`: 1=0.889, 2=0.800
+## IRDS_clf_bn_EFR
 
-The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.498 ± 0.261 | 0.498 ± 0.261 | 0.600 ± 0.200 | 0.694 ± 0.234 | 0.463 0.333 0.265 0.429 1.000 |
+| rf_flatten | 0.564 ± 0.258 | 0.564 ± 0.258 | 0.629 ± 0.206 | 0.715 ± 0.205 | 0.431 0.696 0.265 0.429 1.000 |
+| rf_summary | 0.533 ± 0.248 | 0.533 ± 0.248 | 0.612 ± 0.195 | 0.706 ± 0.225 | 0.463 0.507 0.265 0.429 1.000 |
+| minirocket | 0.669 ± 0.245 | 0.669 ± 0.245 | 0.710 ± 0.191 | 0.790 ± 0.204 | 0.463 0.853 0.332 0.700 1.000 |
+
+## IRDS_clf_bn_SAL
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.365 ± 0.075 | 0.365 ± 0.075 | 0.500 ± 0.000 | 0.597 ± 0.180 | 0.257 0.294 0.429 0.438 0.409 |
+| rf_flatten | 0.330 ± 0.053 | 0.330 ± 0.053 | 0.426 ± 0.118 | 0.445 ± 0.129 | 0.378 0.294 0.273 0.297 0.409 |
+| rf_summary | 0.381 ± 0.107 | 0.381 ± 0.107 | 0.469 ± 0.101 | 0.496 ± 0.136 | 0.576 0.294 0.333 0.291 0.409 |
+| minirocket | 0.511 ± 0.193 | 0.511 ± 0.193 | 0.592 ± 0.116 | 0.632 ± 0.193 | 0.819 0.294 0.644 0.389 0.409 |
+
+## IRDS_clf_bn_SAR
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.399 ± 0.066 | 0.399 ± 0.066 | 0.500 ± 0.000 | 0.682 ± 0.181 | 0.478 0.345 0.300 0.450 0.419 |
+| rf_flatten | 0.518 ± 0.177 | 0.518 ± 0.177 | 0.567 ± 0.117 | 0.716 ± 0.200 | 0.478 0.521 0.300 0.450 0.839 |
+| rf_summary | 0.513 ± 0.143 | 0.513 ± 0.143 | 0.569 ± 0.090 | 0.725 ± 0.163 | 0.478 0.708 0.300 0.450 0.630 |
+| minirocket | 0.580 ± 0.180 | 0.580 ± 0.180 | 0.616 ± 0.167 | 0.762 ± 0.122 | 0.455 0.457 0.914 0.450 0.625 |
+
+## IRDS_clf_bn_SFE
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.470 ± 0.291 | 0.470 ± 0.291 | 0.600 ± 0.200 | 0.653 ± 0.310 | 0.400 0.121 0.483 1.000 0.345 |
+| rf_flatten | 0.611 ± 0.297 | 0.611 ± 0.297 | 0.707 ± 0.189 | 0.706 ± 0.306 | 0.667 0.121 0.483 1.000 0.784 |
+| rf_summary | 0.597 ± 0.302 | 0.597 ± 0.302 | 0.697 ± 0.204 | 0.707 ± 0.311 | 0.829 0.121 0.483 1.000 0.552 |
+| minirocket | 0.611 ± 0.197 | 0.706 ± 0.223 | 0.756 ± 0.184 | 0.812 ± 0.169 | 1.000 0.542 0.483 0.476 0.552 |
+
+## IRDS_clf_bn_SFL
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.258 ± 0.126 | 0.258 ± 0.126 | 0.500 ± 0.000 | 0.390 ± 0.251 | 0.275 0.324 0.150 0.093 0.448 |
+| rf_flatten | 0.461 ± 0.178 | 0.461 ± 0.178 | 0.557 ± 0.113 | 0.560 ± 0.205 | 0.587 0.673 0.150 0.435 0.459 |
+| rf_summary | 0.532 ± 0.146 | 0.532 ± 0.146 | 0.610 ± 0.184 | 0.613 ± 0.142 | 0.390 0.673 0.398 0.739 0.459 |
+| minirocket | 0.767 ± 0.110 | 0.767 ± 0.110 | 0.794 ± 0.128 | 0.821 ± 0.124 | 0.700 0.651 0.965 0.803 0.714 |
+
+## IRDS_clf_bn_SFR
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.285 ± 0.147 | 0.285 ± 0.147 | 0.500 ± 0.000 | 0.464 ± 0.322 | 0.151 0.438 0.116 0.478 0.241 |
+| rf_flatten | 0.618 ± 0.321 | 0.618 ± 0.321 | 0.744 ± 0.225 | 0.641 ± 0.309 | 0.151 0.416 0.574 1.000 0.947 |
+| rf_summary | 0.583 ± 0.186 | 0.583 ± 0.186 | 0.741 ± 0.134 | 0.634 ± 0.197 | 0.282 0.585 0.762 0.496 0.788 |
+| minirocket | 0.722 ± 0.135 | 0.722 ± 0.135 | 0.814 ± 0.120 | 0.809 ± 0.103 | 0.650 0.652 0.825 0.556 0.929 |
+
+## IRDS_clf_bn_STL
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.442 ± 0.323 | 0.442 ± 0.323 | 0.500 ± 0.316 | 0.614 ± 0.352 | 0.456 0.000 1.000 0.434 0.318 |
+| rf_flatten | 0.442 ± 0.323 | 0.442 ± 0.323 | 0.500 ± 0.316 | 0.614 ± 0.352 | 0.456 0.000 1.000 0.434 0.318 |
+| rf_summary | 0.459 ± 0.325 | 0.459 ± 0.325 | 0.506 ± 0.316 | 0.608 ± 0.350 | 0.456 0.000 1.000 0.520 0.318 |
+| minirocket | 0.809 ± 0.172 | 0.809 ± 0.172 | 0.811 ± 0.158 | 0.866 ± 0.146 | 0.733 1.000 1.000 0.760 0.550 |
+
+## IRDS_clf_bn_STR
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.505 ± 0.256 | 0.505 ± 0.256 | 0.600 ± 0.200 | 0.709 ± 0.220 | 0.436 0.278 0.460 1.000 0.350 |
+| rf_flatten | 0.371 ± 0.067 | 0.438 ± 0.131 | 0.500 ± 0.000 | 0.609 ± 0.174 | 0.436 0.278 0.460 0.333 0.350 |
+| rf_summary | 0.543 ± 0.234 | 0.543 ± 0.234 | 0.619 ± 0.192 | 0.728 ± 0.200 | 0.502 0.405 0.460 1.000 0.350 |
+| minirocket | 0.580 ± 0.173 | 0.671 ± 0.201 | 0.719 ± 0.153 | 0.722 ± 0.150 | 0.773 0.536 0.785 0.455 0.350 |
+
+## KINECAL_clf_bn_3WFV
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.473 ± 0.009 | 0.473 ± 0.009 | 0.500 ± 0.000 | 0.900 ± 0.033 | 0.478 0.478 0.478 0.478 0.455 |
+| rf_flatten | 0.473 ± 0.009 | 0.473 ± 0.009 | 0.500 ± 0.000 | 0.900 ± 0.033 | 0.478 0.478 0.478 0.478 0.455 |
+| rf_summary | 0.473 ± 0.009 | 0.473 ± 0.009 | 0.500 ± 0.000 | 0.900 ± 0.033 | 0.478 0.478 0.478 0.478 0.455 |
+| minirocket | 0.578 ± 0.211 | 0.578 ± 0.211 | 0.600 ± 0.200 | 0.917 ± 0.053 | 0.478 0.478 0.478 1.000 0.455 |
+
+## KINECAL_clf_bn_GGFV
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.475 ± 0.008 | 0.475 ± 0.008 | 0.500 ± 0.000 | 0.904 ± 0.029 | 0.480 0.458 0.478 0.478 0.478 |
+| rf_flatten | 0.475 ± 0.008 | 0.475 ± 0.008 | 0.500 ± 0.000 | 0.904 ± 0.029 | 0.480 0.458 0.478 0.478 0.478 |
+| rf_summary | 0.475 ± 0.008 | 0.475 ± 0.008 | 0.500 ± 0.000 | 0.904 ± 0.029 | 0.480 0.458 0.478 0.478 0.478 |
+| minirocket | 0.455 ± 0.023 | 0.455 ± 0.023 | 0.464 ± 0.044 | 0.837 ± 0.076 | 0.480 0.458 0.478 0.429 0.429 |
+
+## KINECAL_clf_bn_QSEC
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.485 ± 0.000 | 0.485 ± 0.000 | 0.500 ± 0.000 | 0.943 ± 0.002 | 0.486 0.486 0.485 0.485 0.485 |
+| rf_flatten | 0.485 ± 0.000 | 0.485 ± 0.000 | 0.500 ± 0.000 | 0.943 ± 0.002 | 0.486 0.486 0.485 0.485 0.485 |
+| rf_summary | 0.485 ± 0.000 | 0.485 ± 0.000 | 0.500 ± 0.000 | 0.943 ± 0.002 | 0.486 0.486 0.485 0.485 0.485 |
+| minirocket | 0.482 ± 0.006 | 0.482 ± 0.006 | 0.494 ± 0.012 | 0.931 ± 0.021 | 0.486 0.471 0.485 0.485 0.485 |
+
+## KINECAL_clf_bn_QSEO
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.485 ± 0.000 | 0.485 ± 0.000 | 0.500 ± 0.000 | 0.941 ± 0.000 | 0.485 0.485 0.485 0.485 0.485 |
+| rf_flatten | 0.485 ± 0.000 | 0.485 ± 0.000 | 0.500 ± 0.000 | 0.941 ± 0.000 | 0.485 0.485 0.485 0.485 0.485 |
+| rf_summary | 0.485 ± 0.000 | 0.485 ± 0.000 | 0.500 ± 0.000 | 0.941 ± 0.000 | 0.485 0.485 0.485 0.485 0.485 |
+| minirocket | 0.485 ± 0.000 | 0.485 ± 0.000 | 0.500 ± 0.000 | 0.941 ± 0.000 | 0.485 0.485 0.485 0.485 0.485 |
+
+## SPHERE_clf_bn_WUS
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.311 ± 0.060 | 0.311 ± 0.060 | 0.500 ± 0.000 | 0.462 ± 0.124 | 0.333 0.400 0.333 0.200 0.300 0.300 |
+| rf_flatten | 0.555 ± 0.239 | 0.555 ± 0.239 | 0.646 ± 0.180 | 0.607 ± 0.197 | 0.333 1.000 0.486 0.500 0.300 0.708 |
+| rf_summary | 0.715 ± 0.215 | 0.715 ± 0.215 | 0.771 ± 0.159 | 0.742 ± 0.175 | 0.733 1.000 0.667 0.733 0.300 0.857 |
+| minirocket | 0.846 ± 0.184 | 0.846 ± 0.184 | 0.875 ± 0.134 | 0.851 ± 0.183 | 0.733 1.000 1.000 0.500 1.000 0.844 |
+
+## UCDHE_clf_bn_MP
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.426 ± 0.005 | 0.426 ± 0.005 | 0.500 ± 0.000 | 0.741 ± 0.014 | 0.420 0.420 0.429 0.429 0.430 |
+| rf_flatten | 0.539 ± 0.069 | 0.539 ± 0.069 | 0.553 ± 0.044 | 0.733 ± 0.047 | 0.546 0.590 0.523 0.418 0.617 |
+| rf_summary | 0.510 ± 0.066 | 0.510 ± 0.066 | 0.544 ± 0.036 | 0.761 ± 0.017 | 0.575 0.516 0.589 0.429 0.440 |
+| minirocket | 0.777 ± 0.032 | 0.777 ± 0.032 | 0.783 ± 0.049 | 0.830 ± 0.012 | 0.823 0.789 0.753 0.731 0.788 |
+
+## UCDHE_clf_bn_Rowing
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.443 ± 0.004 | 0.443 ± 0.004 | 0.500 ± 0.000 | 0.794 ± 0.012 | 0.443 0.444 0.448 0.437 0.441 |
+| rf_flatten | 0.628 ± 0.042 | 0.628 ± 0.042 | 0.612 ± 0.037 | 0.814 ± 0.019 | 0.593 0.602 0.587 0.669 0.687 |
+| rf_summary | 0.613 ± 0.048 | 0.613 ± 0.048 | 0.601 ± 0.039 | 0.821 ± 0.014 | 0.629 0.568 0.561 0.617 0.692 |
+| minirocket | 0.670 ± 0.029 | 0.670 ± 0.029 | 0.679 ± 0.038 | 0.777 ± 0.020 | 0.689 0.697 0.667 0.614 0.681 |
+
+## UIPRMD_clf_bn_DS
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.726 ± 0.087 | 0.726 ± 0.087 | 0.739 ± 0.080 | 0.739 ± 0.080 | 0.649 0.663 0.804 0.657 0.858 |
+| rf_summary | 0.793 ± 0.240 | 0.793 ± 0.240 | 0.828 ± 0.178 | 0.828 ± 0.178 | 0.829 0.333 0.972 0.831 1.000 |
+| minirocket | 0.765 ± 0.219 | 0.765 ± 0.219 | 0.800 ± 0.155 | 0.800 ± 0.155 | 0.860 0.333 0.944 0.831 0.858 |
+
+## UIPRMD_clf_bn_HS
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.707 ± 0.188 | 0.707 ± 0.188 | 0.742 ± 0.139 | 0.742 ± 0.139 | 0.333 0.944 0.775 0.873 0.626 0.775 0.625 |
+| rf_summary | 0.954 ± 0.058 | 0.954 ± 0.058 | 0.955 ± 0.057 | 0.955 ± 0.057 | 1.000 1.000 0.887 0.937 0.854 1.000 1.000 |
+| minirocket | 0.934 ± 0.088 | 0.934 ± 0.088 | 0.937 ± 0.084 | 0.937 ± 0.084 | 1.000 1.000 0.829 0.937 1.000 0.775 1.000 |
+
+## UIPRMD_clf_bn_IL
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.426 ± 0.158 | 0.426 ± 0.158 | 0.532 ± 0.097 | 0.532 ± 0.097 | 0.333 0.308 0.333 0.308 0.721 0.556 |
+| rf_summary | 0.555 ± 0.212 | 0.555 ± 0.212 | 0.634 ± 0.147 | 0.634 ± 0.147 | 0.333 0.446 0.721 0.333 0.579 0.916 |
+| minirocket | 0.609 ± 0.251 | 0.609 ± 0.251 | 0.671 ± 0.206 | 0.671 ± 0.206 | 0.542 0.280 0.944 0.446 0.944 0.496 |
+
+## UIPRMD_clf_bn_SASLR
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.547 ± 0.216 | 0.547 ± 0.216 | 0.635 ± 0.139 | 0.635 ± 0.139 | 0.333 0.749 0.333 0.766 0.699 0.333 0.829 0.333 |
+| rf_summary | 0.672 ± 0.273 | 0.672 ± 0.273 | 0.737 ± 0.197 | 0.737 ± 0.197 | 0.333 0.950 0.333 0.766 0.887 0.333 0.775 1.000 |
+| minirocket | 0.831 ± 0.198 | 0.831 ± 0.198 | 0.854 ± 0.146 | 0.854 ± 0.146 | 1.000 0.899 0.333 0.887 0.766 0.944 0.887 0.928 |
+
+## UIPRMD_clf_bn_SL
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.610 ± 0.283 | 0.610 ± 0.283 | 0.694 ± 0.202 | 0.694 ± 0.202 | 0.887 0.333 0.333 0.333 0.775 1.000 0.887 0.333 |
+| rf_summary | 0.708 ± 0.293 | 0.708 ± 0.293 | 0.771 ± 0.214 | 0.771 ± 0.214 | 0.944 0.829 0.333 1.000 0.944 0.333 0.944 0.333 |
+| minirocket | 0.837 ± 0.194 | 0.837 ± 0.194 | 0.858 ± 0.159 | 0.858 ± 0.159 | 0.887 0.887 0.446 1.000 1.000 0.887 1.000 0.591 |
+
+## UIPRMD_clf_bn_SSA
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.802 ± 0.230 | 0.802 ± 0.230 | 0.833 ± 0.178 | 0.833 ± 0.178 | 0.625 1.000 0.333 0.944 0.944 0.766 1.000 |
+| rf_summary | 0.984 ± 0.025 | 0.984 ± 0.025 | 0.984 ± 0.025 | 0.984 ± 0.025 | 0.944 1.000 1.000 0.944 1.000 1.000 1.000 |
+| minirocket | 0.992 ± 0.019 | 0.992 ± 0.019 | 0.992 ± 0.019 | 0.992 ± 0.019 | 1.000 1.000 0.944 1.000 1.000 1.000 1.000 |
+
+## UIPRMD_clf_bn_SSE
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.653 ± 0.281 | 0.653 ± 0.281 | 0.725 ± 0.211 | 0.725 ± 0.211 | 0.333 0.333 0.625 0.944 0.654 1.000 0.333 1.000 |
+| rf_summary | 0.873 ± 0.172 | 0.873 ± 0.172 | 0.887 ± 0.146 | 0.887 ± 0.146 | 1.000 0.699 0.887 1.000 1.000 1.000 0.496 0.899 |
+| minirocket | 0.952 ± 0.065 | 0.952 ± 0.065 | 0.953 ± 0.064 | 0.953 ± 0.064 | 1.000 1.000 0.887 1.000 1.000 1.000 0.829 0.899 |
+
+## UIPRMD_clf_bn_SSIER
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.607 ± 0.266 | 0.607 ± 0.266 | 0.686 ± 0.194 | 0.686 ± 0.194 | 0.601 0.721 0.333 1.000 0.333 0.333 0.928 |
+| rf_summary | 0.888 ± 0.113 | 0.888 ± 0.113 | 0.892 ± 0.105 | 0.892 ± 0.105 | 0.627 0.887 0.887 0.944 0.944 1.000 0.928 |
+| minirocket | 0.883 ± 0.100 | 0.883 ± 0.100 | 0.888 ± 0.092 | 0.888 ± 0.092 | 0.950 0.944 0.829 0.829 0.944 1.000 0.689 |
+
+## UIPRMD_clf_bn_SSS
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.482 ± 0.237 | 0.482 ± 0.237 | 0.602 ± 0.180 | 0.602 ± 0.180 | 1.000 0.333 0.446 0.446 0.333 0.333 |
+| rf_summary | 0.944 ± 0.080 | 0.944 ± 0.080 | 0.944 ± 0.079 | 0.944 ± 0.079 | 1.000 0.775 0.944 0.944 1.000 1.000 |
+| minirocket | 0.915 ± 0.063 | 0.915 ± 0.063 | 0.917 ± 0.062 | 0.917 ± 0.062 | 1.000 0.829 0.889 0.887 1.000 0.887 |
+
+## UIPRMD_clf_bn_STS
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.333 ± 0.000 | 0.333 ± 0.000 | 0.500 ± 0.000 | 0.500 ± 0.000 | 0.333 0.333 0.333 0.333 0.333 |
+| rf_flatten | 0.794 ± 0.122 | 0.794 ± 0.122 | 0.805 ± 0.113 | 0.805 ± 0.113 | 0.699 1.000 0.652 0.776 0.844 |
+| rf_summary | 0.946 ± 0.035 | 0.946 ± 0.035 | 0.946 ± 0.035 | 0.946 ± 0.035 | 0.944 1.000 0.912 0.969 0.906 |
+| minirocket | 0.863 ± 0.135 | 0.863 ± 0.135 | 0.873 ± 0.118 | 0.873 ± 0.118 | 0.916 1.000 0.852 0.610 0.937 |
