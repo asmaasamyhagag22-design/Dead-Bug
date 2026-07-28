@@ -23,25 +23,31 @@ import numpy as np
 def confusion_matrix(
     y_true: np.ndarray, y_pred: np.ndarray, labels: Sequence | None = None
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return ``(cm, labels)`` with ``cm[i, j]`` = true ``i`` predicted ``j``."""
+    """Return ``(cm, labels)`` with ``cm[i, j]`` = true ``i`` predicted ``j``.
+
+    The matrix always spans the union of true and predicted labels. Restricting
+    it to a subset would have to silently drop samples whose prediction falls
+    outside that subset, which flatters recall: a model that answers "E3" on a
+    fold containing no E3 would look like it had not answered at all.
+    """
     y_true = np.asarray(y_true).ravel()
     y_pred = np.asarray(y_pred).ravel()
-    if labels is None:
-        labels = np.unique(np.concatenate([y_true, y_pred]))
-    labels = np.asarray(labels)
+    union = np.unique(np.concatenate([y_true, y_pred]))
+    if labels is not None:
+        union = np.unique(np.concatenate([np.asarray(labels), union]))
 
-    index = {v: i for i, v in enumerate(labels)}
-    cm = np.zeros((labels.size, labels.size), dtype=np.int64)
-    for t, p in zip(y_true, y_pred):
+    index = {v: i for i, v in enumerate(union.tolist())}
+    cm = np.zeros((union.size, union.size), dtype=np.int64)
+    for t, p in zip(y_true.tolist(), y_pred.tolist()):
         cm[index[t], index[p]] += 1
-    return cm, labels
+    return cm, union
 
 
 def per_class_f1(
     y_true: np.ndarray, y_pred: np.ndarray, labels: Sequence | None = None
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Per-class F1 and the label order it corresponds to."""
-    cm, labels = confusion_matrix(y_true, y_pred, labels)
+    """Per-class F1 over the union of true and predicted labels."""
+    cm, union = confusion_matrix(y_true, y_pred, labels)
     tp = np.diag(cm).astype(np.float64)
     predicted = cm.sum(axis=0).astype(np.float64)
     actual = cm.sum(axis=1).astype(np.float64)
@@ -51,13 +57,23 @@ def per_class_f1(
         recall = np.where(actual > 0, tp / actual, 0.0)
         denom = precision + recall
         f1 = np.where(denom > 0, 2 * precision * recall / denom, 0.0)
-    return f1, labels
+    return f1, union
 
 
-def macro_f1(y_true: np.ndarray, y_pred: np.ndarray, labels: Sequence | None = None) -> float:
-    """Unweighted mean of per-class F1 -- the headline metric for both tracks."""
-    f1, _ = per_class_f1(y_true, y_pred, labels)
-    return float(f1.mean())
+def macro_f1(
+    y_true: np.ndarray, y_pred: np.ndarray, average_over: Sequence | None = None
+) -> float:
+    """Unweighted mean of per-class F1.
+
+    ``average_over`` restricts which classes are *averaged*, not which samples
+    are counted. Predicting a class outside that set still costs the true class
+    its recall -- it simply does not add a zero-F1 term of its own.
+    """
+    f1, union = per_class_f1(y_true, y_pred)
+    if average_over is None:
+        return float(f1.mean())
+    keep = np.isin(union, np.asarray(average_over))
+    return float(f1[keep].mean()) if keep.any() else float("nan")
 
 
 def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -66,11 +82,12 @@ def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 def balanced_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Mean per-class recall over the classes actually present in ``y_true``."""
-    cm, _ = confusion_matrix(y_true, y_pred, labels=np.unique(y_true))
+    cm, union = confusion_matrix(y_true, y_pred)
     actual = cm.sum(axis=1).astype(np.float64)
     with np.errstate(divide="ignore", invalid="ignore"):
         recall = np.where(actual > 0, np.diag(cm) / actual, np.nan)
-    return float(np.nanmean(recall))
+    keep = np.isin(union, np.unique(y_true))
+    return float(np.nanmean(recall[keep])) if keep.any() else float("nan")
 
 
 def macro_f1_present(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -89,7 +106,7 @@ def macro_f1_present(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     The union version is the stricter reading; this one measures performance on
     what the fold could actually assess.
     """
-    return macro_f1(y_true, y_pred, labels=np.unique(y_true))
+    return macro_f1(y_true, y_pred, average_over=np.unique(y_true))
 
 
 def wilson_interval(
@@ -257,6 +274,112 @@ def eval_folds(
         out[f"{name}_mean"] = float(np.mean(values))
         out[f"{name}_std"] = float(np.std(values))
     return out
+
+
+def rank_table(
+    by_dataset: dict[str, dict[str, dict]], metric: str = "macro_f1_mean"
+) -> dict:
+    """Aggregate the ladder across datasets by **mean rank**.
+
+    This is the headline result, and it exists because no single dataset here
+    can carry one. Test folds run to 6-14 samples; a per-fold score can swing
+    0.14 to 1.00 on sampling alone. Averaging *scores* across datasets is also
+    misleading, because a dataset where every model scores 0.9 would dominate
+    one where they all score 0.4.
+
+    Ranking sidesteps both: on each dataset the models are ordered 1..k (ties
+    share the average rank), and the reported figure is each model's mean rank
+    over every dataset it ran on. It is the standard presentation in the
+    time-series-classification literature for exactly this reason.
+
+    Only datasets where a model actually ran count toward its mean, so a model
+    evaluated on a subset is not silently credited or penalised -- but the
+    ``n_datasets`` column makes the uneven coverage visible.
+    """
+    ranks: dict[str, list[float]] = {}
+    wins: dict[str, int] = {}
+    scores: dict[str, list[float]] = {}
+
+    for results in by_dataset.values():
+        usable = {m: r[metric] for m, r in results.items() if np.isfinite(r.get(metric, np.nan))}
+        if len(usable) < 2:
+            continue
+        models = list(usable)
+        values = np.array([usable[m] for m in models], dtype=np.float64)
+        order = _average_ranks(-values)          # negate: higher score -> better rank
+        best = float(values.max())
+        for model, rank, value in zip(models, order, values):
+            ranks.setdefault(model, []).append(float(rank))
+            scores.setdefault(model, []).append(float(value))
+            wins[model] = wins.get(model, 0) + int(value >= best - 1e-12)
+
+    rows = []
+    for model, values in ranks.items():
+        rows.append({
+            "model": model,
+            "mean_rank": float(np.mean(values)),
+            "n_datasets": len(values),
+            "wins": wins.get(model, 0),
+            "mean_score": float(np.mean(scores[model])),
+            "median_score": float(np.median(scores[model])),
+        })
+    rows.sort(key=lambda r: r["mean_rank"])
+    return {"rows": rows, "metric": metric, "n_datasets": len(by_dataset)}
+
+
+def _average_ranks(values: np.ndarray) -> np.ndarray:
+    """Ranks starting at 1, with ties sharing their average."""
+    order = np.argsort(values, kind="mergesort")
+    ranks = np.empty(values.size, dtype=np.float64)
+    ranks[order] = np.arange(1, values.size + 1, dtype=np.float64)
+    for value in np.unique(values):
+        tied = values == value
+        if tied.sum() > 1:
+            ranks[tied] = ranks[tied].mean()
+    return ranks
+
+
+def render_rank_table(summary: dict) -> str:
+    lines = [
+        f"| model | mean rank | wins | mean {summary['metric']} | median | datasets |",
+        "|---|---|---|---|---|---|",
+    ]
+    for r in summary["rows"]:
+        lines.append(
+            f"| {r['model']} | **{r['mean_rank']:.2f}** | {r['wins']} "
+            f"| {r['mean_score']:.3f} | {r['median_score']:.3f} | {r['n_datasets']} |"
+        )
+    return "\n".join(lines)
+
+
+def family_table(
+    by_dataset: dict[str, dict[str, dict]], metric: str = "macro_f1_mean"
+) -> str:
+    """Per-source-collection means -- IRDS, KIMORE, KERAAL, UI-PRMD and so on.
+
+    Worth separating because the collections differ in exercise, capture rig and
+    difficulty, and a model that only wins on one family is a different claim
+    from one that wins broadly.
+    """
+    families: dict[str, dict[str, list[float]]] = {}
+    for name, results in by_dataset.items():
+        family = name.split("_clf")[0]
+        for model, r in results.items():
+            value = r.get(metric)
+            if value is not None and np.isfinite(value):
+                families.setdefault(family, {}).setdefault(model, []).append(value)
+
+    models = sorted({m for f in families.values() for m in f})
+    lines = ["| family | n | " + " | ".join(models) + " |",
+             "|---" * (len(models) + 2) + "|"]
+    for family in sorted(families):
+        counts = max(len(v) for v in families[family].values())
+        cells = []
+        for model in models:
+            values = families[family].get(model)
+            cells.append(f"{np.mean(values):.3f}" if values else "--")
+        lines.append(f"| {family} | {counts} | " + " | ".join(cells) + " |")
+    return "\n".join(lines)
 
 
 def results_table(results: dict[str, dict]) -> str:

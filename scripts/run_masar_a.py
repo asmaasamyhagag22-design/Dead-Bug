@@ -25,6 +25,61 @@ from deadbug.config import cfg_get, load_config, resolve_path, seed_everything  
 from deadbug.modeling import evaluate, rehabpile, train  # noqa: E402
 
 
+def benchmark_order() -> list[str]:
+    """All 39 classification datasets, most relevant to this project first.
+
+    Relevance order rather than size order on purpose: a run that dies partway
+    should have finished the datasets the report actually leans on. Multi-class
+    problems are error-*type* classification, which is what Dead Bug ultimately
+    is, so they come before the binary ones.
+    """
+    import aeon.datasets.rehabpile_loader as R
+
+    everything = sorted(R.REHABPILE_FOLDS["classification"])
+    head = (
+        [d for d in everything if d.startswith("KIMORE")]
+        + [d for d in everything if d.startswith("KERAAL") and "_mc_" in d]
+        + [d for d in everything if d.startswith("UCDHE") and "_mc_" in d]
+        + [d for d in everything if d.startswith("KERAAL") and "_bn_" in d]
+    )
+    return head + [d for d in everything if d not in head]
+
+
+def load_existing(csv_path: Path) -> dict[str, dict[str, dict]]:
+    """Re-read a previous run so the benchmark is resumable.
+
+    Only the aggregate metrics come back -- predictions are not reloaded -- but
+    that is enough for the rank table, and it means a 10-hour run that dies at
+    hour 8 does not start over.
+    """
+    if not csv_path.exists():
+        return {}
+    out: dict[str, dict[str, dict]] = {}
+    lines = [l for l in csv_path.read_text(encoding="utf-8").splitlines() if l and not l.startswith("#")]
+    if not lines:
+        return {}
+    header = lines[0].split(",")
+    for line in lines[1:]:
+        parts = line.split(",")
+        if len(parts) < len(header):
+            continue
+        row = dict(zip(header, parts))
+        record: dict = {}
+        for key, value in row.items():
+            if key in ("dataset", "model", "per_fold"):
+                continue
+            try:
+                record[key] = float(value)
+            except ValueError:
+                pass
+        record["per_fold"] = [float(v) for v in row.get("per_fold", "").split() if v]
+        record["mean"] = record.get("macro_f1_mean", float("nan"))
+        record["std"] = record.get("macro_f1_std", float("nan"))
+        record["n_folds"] = int(record.get("n_folds", 0))
+        out.setdefault(row["dataset"], {})[row["model"]] = record
+    return out
+
+
 def run_dataset(name: str, cfg: dict, models: list[str], folds: int | None, sanity: bool) -> dict:
     extract_path = resolve_path(cfg, "masar_a.extract_path")
     extract_path.mkdir(parents=True, exist_ok=True)
@@ -46,19 +101,19 @@ def run_dataset(name: str, cfg: dict, models: list[str], folds: int | None, sani
     def load(fold: int):
         return rehabpile.load_fold(name, fold, extract_path)
 
-    rf_kwargs = {
-        "n_estimators": cfg_get(cfg, "masar_a.rf.n_estimators"),
-        "random_state": cfg_get(cfg, "masar_a.rf.random_state"),
-        "n_jobs": cfg_get(cfg, "masar_a.rf.n_jobs"),
-    }
     lite_kwargs = dict(cfg_get(cfg, "masar_a.litemv"))
     if sanity:
         lite_kwargs["n_epochs"] = cfg_get(cfg, "masar_a.sanity.n_epochs")
+    kwargs_for = {
+        "litemv": lite_kwargs,
+        "minirocket": dict(cfg_get(cfg, "masar_a.minirocket")),
+    }
+    rf_kwargs = dict(cfg_get(cfg, "masar_a.rf"))
 
     results: dict[str, dict] = {}
     for model in models:
         fn = train.FIT_PREDICT[model]
-        kwargs = lite_kwargs if model == "litemv" else rf_kwargs
+        kwargs = kwargs_for.get(model, rf_kwargs)
         t0 = time.time()
         try:
             res = evaluate.eval_folds(
@@ -104,24 +159,55 @@ def write_reports(all_results: dict[str, dict[str, dict]], cfg: dict, sanity: bo
     csv_path.write_text("\n".join(rows) + "\n", encoding="utf-8")
     print(f"\nwrote {csv_path}")
 
-    # Persist predictions so metrics can be revised without retraining.
+    # Persist predictions so metrics can be revised without retraining. Records
+    # restored from a previous run's CSV carry metrics only, so skip those.
     preds = reports / f"masar_a_predictions{suffix}.npz"
     payload = {}
     for dataset, results in all_results.items():
         for model, r in results.items():
+            if "y_true" not in r:
+                continue
             payload[f"{dataset}__{model}__true"] = r["y_true"]
             payload[f"{dataset}__{model}__pred"] = r["y_pred"]
             payload[f"{dataset}__{model}__folds"] = np.asarray(r["fold_sizes"])
-    np.savez_compressed(preds, **payload)
-    print(f"wrote {preds}")
+    if payload:
+        np.savez_compressed(preds, **payload)
+        print(f"wrote {preds}")
 
-    md = ["# Track A -- Rehab-Pile model ladder", ""]
+    md = ["# Track A -- Rehab-Pile benchmark", ""]
     if sanity:
         md += ["> SANITY RUN -- one fold, reduced epochs. Not a reportable number.", ""]
+
+    if len(all_results) > 1:
+        summary = evaluate.rank_table(all_results)
+        md += [
+            f"## Headline: mean rank over {summary['n_datasets']} datasets",
+            "",
+            evaluate.render_rank_table(summary),
+            "",
+            "Mean rank, not mean score. Test folds here hold 6-14 samples, so a "
+            "per-fold score can swing on sampling alone, and averaging raw scores "
+            "would let a dataset where everything scores 0.9 outweigh one where "
+            "everything scores 0.4. Ranking is the standard presentation in the "
+            "time-series-classification literature for exactly this reason. "
+            "`wins` counts datasets where a model tied or took the top score.",
+            "",
+            "`class_weight='balanced'` is set on RandomForest and MiniRocket. aeon "
+            "does not expose it for LITETimeClassifier, so LITEMV runs unweighted -- "
+            "relevant wherever the classes are imbalanced.",
+            "",
+            "## Per collection",
+            "",
+            evaluate.family_table(all_results),
+            "",
+            "## Per dataset",
+            "",
+        ]
+
     for dataset, results in all_results.items():
         md += [f"## {dataset}", "", evaluate.results_table(results), ""]
-        best = max(results, key=lambda m: results[m]["mean"], default=None)
-        if best:
+        best = max(results, key=lambda m: results[m].get("mean", float("-inf")), default=None)
+        if best and "labels" in results[best]:
             r = results[best]
             md += [
                 f"Pooled per-class F1 for `{best}`: "
@@ -149,9 +235,13 @@ def _plot_confusions(all_results: dict, figures: Path, suffix: str) -> None:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    panels = [
-        (d, m, r) for d, res in all_results.items() for m, r in res.items() if m == "litemv"
-    ] or [(d, m, r) for d, res in all_results.items() for m, r in res.items()][:1]
+    have_cm = [
+        (d, m, r)
+        for d, res in all_results.items()
+        for m, r in res.items()
+        if "cm_pooled" in r
+    ]
+    panels = [p for p in have_cm if p[1] == "litemv"][:2] or have_cm[:2]
     if not panels:
         return
 
@@ -181,35 +271,64 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--config", default="configs/base.yaml")
     ap.add_argument("--dataset", action="append", help="repeatable; defaults to config")
+    ap.add_argument("--all", action="store_true", help="every classification dataset")
     ap.add_argument("--models", help="comma-separated subset of the ladder")
+    ap.add_argument("--cheap", action="store_true", help="skip LITEMV (no TensorFlow)")
     ap.add_argument("--folds", type=int, help="cap the fold count (debugging only)")
     ap.add_argument("--sanity", action="store_true", help="1 fold, reduced epochs")
+    ap.add_argument("--fresh", action="store_true", help="ignore previous results")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
     seed_everything(cfg_get(cfg, "seed"))
     rehabpile.ensure_registry()
 
-    datasets = args.dataset or cfg_get(cfg, "masar_a.datasets")
-    models = (
-        args.models.split(",") if args.models else list(cfg_get(cfg, "masar_a.models"))
-    )
+    if args.all:
+        datasets = benchmark_order()
+    else:
+        datasets = args.dataset or cfg_get(cfg, "masar_a.datasets")
+
+    if args.models:
+        models = args.models.split(",")
+    elif args.cheap:
+        models = list(train.CHEAP_MODELS)
+    else:
+        models = list(cfg_get(cfg, "masar_a.models"))
+
     if args.sanity:
         print("SANITY RUN -- the goal is that nothing raises. Ignore the numbers.")
 
-    all_results = {}
-    for name in datasets:
-        res = run_dataset(name, cfg, models, args.folds, args.sanity)
+    suffix = "_sanity" if args.sanity else ""
+    csv_path = resolve_path(cfg, "paths.reports") / f"masar_a_results{suffix}.csv"
+    all_results = {} if args.fresh else load_existing(csv_path)
+    if all_results:
+        print(f"resuming: {len(all_results)} dataset(s) already in {csv_path.name}")
+
+    for i, name in enumerate(datasets, 1):
+        done = set(all_results.get(name, {}))
+        todo = [m for m in models if m not in done]
+        if not todo:
+            print(f"[{i}/{len(datasets)}] {name}: already complete, skipping")
+            continue
+
+        print(f"\n[{i}/{len(datasets)}]", end=" ")
+        try:
+            res = run_dataset(name, cfg, todo, args.folds, args.sanity)
+        except Exception as exc:  # noqa: BLE001 -- one bad dataset must not end the run
+            print(f"  {name} FAILED to load: {type(exc).__name__}: {exc}", file=sys.stderr)
+            continue
         if res:
-            all_results[name] = res
-            # Write after EVERY dataset, not once at the end. A long multi-dataset
-            # run that dies partway (OOM, a killed terminal) would otherwise throw
-            # away hours of finished work that only ever existed in memory.
+            all_results.setdefault(name, {}).update(res)
+            # Write after EVERY dataset. A ten-hour run that dies at hour eight
+            # must not throw away work that only ever existed in memory.
             write_reports(all_results, cfg, args.sanity)
 
     if not all_results:
         print("\nno results -- every model failed", file=sys.stderr)
         return 1
+
+    if len(all_results) > 1:
+        print("\n" + evaluate.render_rank_table(evaluate.rank_table(all_results)))
     return 0
 
 

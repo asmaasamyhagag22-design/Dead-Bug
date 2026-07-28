@@ -35,6 +35,16 @@ def fit_predict_rf_summary(
     return model.predict(baselines.summary_features(x_te))
 
 
+def fit_predict_minirocket(
+    x_tr: np.ndarray, y_tr: np.ndarray, x_te: np.ndarray,
+    n_kernels: int = 10000, random_state: int = 0, n_jobs: int = -1,
+    class_weight: str | None = "balanced", **_,
+) -> np.ndarray:
+    model = baselines.make_minirocket(n_kernels, random_state, n_jobs, class_weight)
+    model.fit(x_tr, y_tr)
+    return model.predict(x_te)
+
+
 def fit_predict_litemv(
     x_tr: np.ndarray, y_tr: np.ndarray, x_te: np.ndarray,
     use_litemv: bool = True, n_classifiers: int = 1, n_epochs: int = 300,
@@ -76,5 +86,10 @@ FIT_PREDICT = {
     "majority": fit_predict_majority,
     "rf_flatten": fit_predict_rf_flatten,
     "rf_summary": fit_predict_rf_summary,
+    "minirocket": fit_predict_minirocket,
     "litemv": fit_predict_litemv,
 }
+
+#: Models that never need TensorFlow -- the set worth running across all 39
+#: benchmark datasets, because they cost seconds each.
+CHEAP_MODELS = ["majority", "rf_flatten", "rf_summary", "minirocket"]

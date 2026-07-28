@@ -229,7 +229,7 @@ masar_a:
   n_folds:
     KIMORE_clf_bn_Sq: 5
     KERAAL_clf_mc_CTK: 6
-  models: [majority, rf_flatten, rf_summary, litemv]
+  models: [majority, rf_flatten, rf_summary, minirocket, litemv]
   metric: macro_f1
   report_as: mean_std_over_folds
   extract_path: data/rehabpile
@@ -237,14 +237,28 @@ masar_a:
     n_estimators: 300
     n_jobs: -1
     random_state: 0
+    # Correctness, not tuning: unweighted models collapse onto the majority
+    # classes on these imbalanced sets and never predict the rare ones.
+    class_weight: balanced
+  minirocket:
+    n_kernels: 10000
+    n_jobs: -1
+    random_state: 0
+    class_weight: balanced
   litemv:
     use_litemv: true      # mandatory for multivariate skeleton data
-    n_classifiers: 1
-    n_epochs: 300         # default 1500 is far too slow for this week
+    # LITETime is an ENSEMBLE. Run 1 used n_classifiers=1 and produced
+    # 0.554 +/- 0.327 on KIMORE -- a std larger than its margin over the
+    # baseline. Ensembling is the mechanism that suppresses exactly that
+    # variance, so running with 1 was measuring noise. 5 is the library default.
+    n_classifiers: 5
+    n_epochs: 300         # library default is 1500; 300 is what the week allows
     batch_size: 64
     random_state: 0
     verbose: false
     file_path: models/    # aeon defaults to './' and litters the repo root
+    # NOTE: aeon exposes no class_weight for LITETimeClassifier, so unlike RF
+    # and MiniRocket this runs unweighted. Say so when reporting.
   sanity:
     fold: 0
     n_epochs: 50

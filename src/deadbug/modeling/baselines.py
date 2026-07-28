@@ -1,15 +1,27 @@
 """Baseline feature extractors and estimators for the model ladder.
 
-The ladder runs dumbest to smartest, and the rung that matters is the third:
+The ladder runs dumbest to smartest:
 
     1. majority           absolute floor
-    2. RF on flatten      weak and slow -- a strawman
-    3. RF on summary      6 statistics per channel  <- THE BASELINE TO BEAT
-    4. LITEMV             the model
+    2. RF on flatten      strawman -- flattening destroys temporal structure
+    3. RF on summary      6 statistics per channel
+    4. MiniRocket         <- THE BASELINE TO BEAT
+    5. LITEMV             the model
 
-Beating RF(flatten) proves nothing. Flattening a multivariate series into one
-long vector destroys the temporal structure, so it is easy to beat and beating
-it is not evidence that a time-series model was needed.
+Beating RF(flatten) proves nothing. MiniRocket is the honest bar: a random
+convolutional transform plus a linear classifier, seconds to fit, and on small
+time-series datasets it is routinely competitive with deep models. If LITEMV
+cannot beat it, that is the finding.
+
+**Class weighting is a correctness fix here, not tuning.** These datasets are
+strongly imbalanced -- KERAAL_clf_mc_CTK is 108/77/49/51 -- and unweighted
+models collapse onto the majority classes and never predict the rare ones at
+all. Run 1 showed exactly that: pooled per-class F1 of C=.772 E1=.582 E2=.000
+E3=.000, with macro-F1 averaging those zeros in at full weight.
+
+Note the asymmetry: RandomForest and MiniRocket both accept ``class_weight``;
+aeon does not expose it on ``LITETimeClassifier``. Report that rather than
+hiding it -- it is part of why the comparison lands where it does.
 """
 
 from __future__ import annotations
@@ -43,9 +55,49 @@ def make_majority():
     return DummyClassifier(strategy="most_frequent")
 
 
-def make_rf(n_estimators: int = 300, random_state: int = 0, n_jobs: int = -1):
+def make_rf(
+    n_estimators: int = 300,
+    random_state: int = 0,
+    n_jobs: int = -1,
+    class_weight: str | None = "balanced",
+):
+    """Random forest, class-weighted by default.
+
+    ``class_weight="balanced"`` is not a tuning knob here, it is a correctness
+    fix. These datasets are strongly imbalanced -- KERAAL_clf_mc_CTK is
+    108/77/49/51 -- and without it the forest collapses onto the majority
+    classes and never predicts the rare ones at all. Run 1 showed exactly that:
+    pooled per-class F1 of C=.772 E1=.582 E2=.000 E3=.000. Macro-F1 averages
+    those zeros in at full weight.
+    """
     from sklearn.ensemble import RandomForestClassifier
 
     return RandomForestClassifier(
-        n_estimators=n_estimators, random_state=random_state, n_jobs=n_jobs
+        n_estimators=n_estimators,
+        random_state=random_state,
+        n_jobs=n_jobs,
+        class_weight=class_weight,
+    )
+
+
+def make_minirocket(
+    n_kernels: int = 10000,
+    random_state: int = 0,
+    n_jobs: int = -1,
+    class_weight: str | None = "balanced",
+):
+    """MiniRocket -- random convolutional kernels + a linear classifier.
+
+    Takes the multivariate series directly, so unlike the RF rungs it needs no
+    hand-designed feature step and keeps the temporal structure. Fits in seconds
+    on datasets this size, which is what makes running it across all 39
+    benchmark problems practical.
+    """
+    from aeon.classification.convolution_based import MiniRocketClassifier
+
+    return MiniRocketClassifier(
+        n_kernels=n_kernels,
+        random_state=random_state,
+        n_jobs=n_jobs,
+        class_weight=class_weight,
     )
