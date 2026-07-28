@@ -1,0 +1,11 @@
+file,dedup_group,md5,action,note
+"Recording 2026-07-25 171125.mp4",G01,5125de1d1041,unique,""
+"Recording 2026-07-25 171515.mp4",G02,f0f4ee503d38,unique,""
+"Video Project 2 (2).mp4",G03,4166f24829ec,review,"REVIEW with Video Project 2.mp4: REVIEW -- likely same session (sim=0.441); REVIEW with Video Project 2mk.mp4: REVIEW -- likely same session (sim=0.821)"
+"Video Project 2.mp4",G04,e96f72591bda,review,"REVIEW with Video Project 2 (2).mp4: REVIEW -- likely same session (sim=0.441); REVIEW with Video Project 2mk.mp4: REVIEW -- likely same session (sim=0.821)"
+"Video Project 2mk.mp4",G05,c308bbf2e249,review,"REVIEW with Video Project 2 (2).mp4: REVIEW -- likely same session (sim=0.821); REVIEW with Video Project 2.mp4: REVIEW -- likely same session (sim=0.821)"
+"clip.mp4",G06,edfdfc20e977,duplicate,"MERGED with videoplayback (4).mp4: md5 identical (sim=1.0)"
+"videoplayback (4).mp4",G06,edfdfc20e977,duplicate,"MERGED with clip.mp4: md5 identical (sim=1.0)"
+"videoplayback (1).mp4",G07,ecc21c5b99b6,unique,""
+"videoplayback (3).mp4",G08,4be4b0a0206d,unique,""
+"videoplayback (6).mp4",G09,01ff193574ef,unique,""

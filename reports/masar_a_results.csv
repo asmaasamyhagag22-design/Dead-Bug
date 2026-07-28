@@ -1,0 +1,5 @@
+dataset,model,macro_f1_mean,macro_f1_std,macro_f1_present_mean,macro_f1_present_std,balanced_accuracy_mean,balanced_accuracy_std,accuracy_mean,accuracy_std,n_folds,per_fold,seconds
+KIMORE_clf_bn_LA,majority,0.6067,0.3228,0.6067,0.3228,0.7000,0.2449,0.7190,0.2421,5,0.3000 1.0000 0.4000 0.3333 1.0000,197.6
+KIMORE_clf_bn_LA,rf_flatten,0.6067,0.3228,0.6067,0.3228,0.7000,0.2449,0.7190,0.2421,5,0.3000 1.0000 0.4000 0.3333 1.0000,2.4
+KIMORE_clf_bn_LA,rf_summary,0.6067,0.3228,0.6067,0.3228,0.7000,0.2449,0.7190,0.2421,5,0.3000 1.0000 0.4000 0.3333 1.0000,2.4
+KIMORE_clf_bn_LA,minirocket,0.6097,0.2216,0.7006,0.2323,0.7167,0.1944,0.7429,0.1673,5,0.7083 0.4545 0.4000 0.4857 1.0000,4.5
