@@ -1,13 +1,13 @@
 # Track A -- Rehab-Pile benchmark
 
-## Headline: mean rank over 11 datasets
+## Headline: mean rank over 14 datasets
 
 | model | mean rank | wins | mean macro_f1_mean | median | datasets |
 |---|---|---|---|---|---|
-| minirocket | **1.64** | 7 | 0.621 | 0.661 | 11 |
-| rf_summary | **2.23** | 2 | 0.540 | 0.583 | 11 |
-| rf_flatten | **2.50** | 2 | 0.510 | 0.535 | 11 |
-| majority | **3.64** | 0 | 0.345 | 0.301 | 11 |
+| minirocket | **1.79** | 8 | 0.610 | 0.614 | 14 |
+| rf_summary | **2.14** | 4 | 0.542 | 0.587 | 14 |
+| rf_flatten | **2.68** | 2 | 0.477 | 0.510 | 14 |
+| majority | **3.39** | 1 | 0.368 | 0.341 | 14 |
 
 Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold score can swing on sampling alone, and averaging raw scores would let a dataset where everything scores 0.9 outweigh one where everything scores 0.4. Ranking is the standard presentation in the time-series-classification literature for exactly this reason. `wins` counts datasets where a model tied or took the top score.
 
@@ -17,7 +17,8 @@ Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold scor
 
 | family | n | majority | minirocket | rf_flatten | rf_summary |
 |---|---|---|---|---|---|
-| KERAAL | 4 | 0.418 | 0.558 | 0.462 | 0.518 |
+| IRDS | 1 | 0.436 | 0.615 | 0.236 | 0.330 |
+| KERAAL | 6 | 0.431 | 0.554 | 0.446 | 0.566 |
 | KIMORE | 5 | 0.392 | 0.614 | 0.505 | 0.530 |
 | UCDHE | 2 | 0.084 | 0.765 | 0.621 | 0.610 |
 
@@ -163,5 +164,44 @@ The reported number is the **mean over folds with its standard deviation**. The 
 | minirocket | 0.525 ± 0.190 | 0.525 ± 0.190 | 0.596 ± 0.122 | 0.681 ± 0.215 | 0.854 0.226 0.576 0.591 0.462 0.440 |
 
 Pooled per-class F1 for `rf_flatten`: C=0.755, E=0.647
+
+The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
+
+## KERAAL_clf_bn_ELK
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.591 ± 0.309 | 0.591 ± 0.309 | 0.667 ± 0.236 | 0.798 ± 0.284 | 1.000 0.467 0.444 0.481 1.000 0.154 |
+| rf_flatten | 0.486 ± 0.254 | 0.563 ± 0.301 | 0.616 ± 0.229 | 0.729 ± 0.272 | 1.000 0.467 0.375 0.462 0.462 0.154 |
+| rf_summary | 0.591 ± 0.309 | 0.591 ± 0.309 | 0.667 ± 0.236 | 0.798 ± 0.284 | 1.000 0.467 0.444 0.481 1.000 0.154 |
+| minirocket | 0.479 ± 0.258 | 0.553 ± 0.296 | 0.600 ± 0.226 | 0.712 ± 0.285 | 0.440 0.467 0.333 0.481 1.000 0.154 |
+
+Pooled per-class F1 for `majority`: C=0.000, E=0.899
+
+The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
+
+## KERAAL_clf_bn_RTK
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.320 ± 0.340 | 0.320 ± 0.340 | 0.417 ± 0.344 | 0.400 ± 0.363 | 0.364 0.000 1.000 0.000 0.381 0.176 |
+| rf_flatten | 0.339 ± 0.143 | 0.464 ± 0.141 | 0.435 ± 0.150 | 0.414 ± 0.135 | 0.626 0.333 0.182 0.235 0.278 0.378 |
+| rf_summary | 0.732 ± 0.221 | 0.796 ± 0.157 | 0.771 ± 0.170 | 0.803 ± 0.147 | 0.754 0.385 1.000 1.000 0.675 0.576 |
+| minirocket | 0.612 ± 0.232 | 0.770 ± 0.245 | 0.775 ± 0.208 | 0.768 ± 0.225 | 0.785 0.467 1.000 0.480 0.291 0.650 |
+
+Pooled per-class F1 for `rf_summary`: C=0.825, E=0.774
+
+The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
+
+## IRDS_clf_bn_EFL
+
+| model | macro-F1 (union) | macro-F1 (present) | balanced acc | accuracy | per fold (macro-F1 union) |
+|---|---|---|---|---|---|
+| majority | 0.436 ± 0.324 | 0.436 ± 0.324 | 0.500 ± 0.316 | 0.599 ± 0.348 | 0.447 0.309 0.000 1.000 0.424 |
+| rf_flatten | 0.236 ± 0.198 | 0.236 ± 0.198 | 0.290 ± 0.237 | 0.351 ± 0.301 | 0.446 0.309 0.000 0.000 0.424 |
+| rf_summary | 0.330 ± 0.174 | 0.424 ± 0.304 | 0.478 ± 0.282 | 0.577 ± 0.325 | 0.447 0.309 0.000 0.471 0.424 |
+| minirocket | 0.615 ± 0.289 | 0.763 ± 0.236 | 0.726 ± 0.247 | 0.788 ± 0.230 | 0.914 1.000 0.267 0.471 0.424 |
+
+Pooled per-class F1 for `minirocket`: 1=0.889, 2=0.800
 
 The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
