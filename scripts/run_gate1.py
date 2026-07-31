@@ -34,7 +34,9 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from deadbug.config import cfg_get, load_config, resolve_path  # noqa: E402
 from deadbug.dataset.build import read_reps  # noqa: E402
-from deadbug.dataset.normative import band_loso, fit_band, score_rep  # noqa: E402
+from deadbug.dataset.normative import (  # noqa: E402
+    band_loso, fit_band, score_rep, supported_mask,
+)
 from deadbug.modeling.evaluate import wilson_interval  # noqa: E402
 
 CONDITION_STYLE = {
@@ -159,12 +161,26 @@ def _plot(reps, band, signal: str, cfg: dict) -> None:
     centres = 0.5 * (np.asarray(band.edges[:-1]) + np.asarray(band.edges[1:]))
     fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
 
-    ax.fill_between(centres, np.asarray(band.mean) - band.sigma * np.asarray(band.std),
-                    band.upper(), color="#1a7f37", alpha=0.12,
+    # Only draw the limit where it means something. fit_band interpolates the
+    # per-bin statistics so the curve is continuous, but score_rep abstains in
+    # bins below MIN_BIN_SUPPORT -- drawing a confident line through them would
+    # show a decision boundary the system will not actually apply.
+    supported = supported_mask(band)
+    lower = np.asarray(band.mean) - band.sigma * np.asarray(band.std)
+    upper = band.upper()
+    shown_lower = np.where(supported, lower, np.nan)
+    shown_upper = np.where(supported, upper, np.nan)
+
+    ax.fill_between(centres, shown_lower, shown_upper, color="#1a7f37", alpha=0.12,
                     label=f"correct, mean ± {band.sigma}sd")
-    ax.plot(centres, band.mean, color="#1a7f37", lw=1.2, alpha=0.7)
-    ax.plot(centres, band.upper(), color="#1a7f37", lw=1.0, ls="--",
+    ax.plot(centres, np.where(supported, band.mean, np.nan),
+            color="#1a7f37", lw=1.2, alpha=0.7)
+    ax.plot(centres, shown_upper, color="#1a7f37", lw=1.0, ls="--",
             label="upper control limit")
+    if not supported.all():
+        ax.plot(centres, upper, color="#8c959f", lw=0.8, ls=":", alpha=0.6,
+                label=f"interpolated, no verdict ({int((~supported).sum())}/"
+                      f"{len(supported)} bins)")
 
     for condition, (colour, marker, label) in CONDITION_STYLE.items():
         subset = reps[reps["condition"] == condition]

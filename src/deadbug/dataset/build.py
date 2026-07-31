@@ -38,6 +38,7 @@ from ..config import cfg_get, resolve_path, write_manifest
 from ..geometry import floor as FL
 from ..geometry.normalize import normalize, torso_len_cv, view_score, classify_view
 from ..pose import skeleton as sk
+from ..qc.report import core_visibility
 from ..segment.activity import find_segments, summarise
 from ..segment.reps import Rep, segment_from_config
 from ..signals import ribcage as RIB
@@ -197,14 +198,29 @@ def build_clip(clip: ClipRecord, cfg: dict, force: bool = False) -> tuple[list[R
     fps = float(data["fps"])
     frame_size = tuple(int(v) for v in data["frame_size"])
 
+    # Everything that measures a LENGTH works from this, never from kpts_raw.
+    # MediaPipe returns [0, 1] coordinates whose x and y have different pixel
+    # scales, and a supine subject is the worst case -- the torso lies along x
+    # while the limbs swing through y, so a raw distance is skewed by the
+    # frame's aspect ratio. Measured here: the wrist-to-opposite-ankle distance
+    # is distorted by up to 1.82x within a single clip, which does not cancel in
+    # the auto-scaled prominence and changed videoplayback (6) from 13 reps to
+    # 17. configs/base.yaml states the rule as `triage.view_space: pixel`;
+    # activity.py and run_live.py both apply it. This is the third place.
+    kpts_px_frame = kpts_raw.copy()
+    kpts_px_frame[..., 0] *= frame_size[0]
+    kpts_px_frame[..., 1] *= frame_size[1]
+
     diagnostics: dict = {
         "clip_id": clip.clip_id,
         "n_frames": int(kpts_raw.shape[0]),
         "fps": fps,
         "frame_size": list(frame_size),
         "detection_rate": float(np.mean(np.isfinite(kpts_raw[:, :, :2]).any(axis=(1, 2)))),
+        "mean_visibility_core": core_visibility(kpts_raw),
         "view_score": float(np.nanmedian(view_score(kpts_raw, frame_size))),
-        "torso_len_cv": torso_len_cv(kpts_raw),
+        # A ratio of lengths, so it needs the same pixel correction.
+        "torso_len_cv": torso_len_cv(kpts_px_frame),
     }
     diagnostics["view"] = classify_view(
         diagnostics["view_score"],
@@ -264,7 +280,13 @@ def build_clip(clip: ClipRecord, cfg: dict, force: bool = False) -> tuple[list[R
     lumbar = np.where(mask_valid, lumbar, np.nan)
     rib = np.where(mask_valid, rib, np.nan)
 
-    kpts_norm, _ = normalize(kpts_raw, stat=cfg_get(cfg, "geometry.normalize.torso_len_ref"))
+    # Pixel-space input, so the rep signal is in real torso lengths and matches
+    # what find_segments already decided on. Feeding kpts_raw here would have
+    # find_segments and find_reps disagreeing about the units of the same
+    # quantity.
+    kpts_norm, _ = normalize(
+        kpts_px_frame, stat=cfg_get(cfg, "geometry.normalize.torso_len_ref")
+    )
 
     sparc_cfg = cfg_get(cfg, "signals.smoothness.sparc")
     rows: list[RepRecord] = []
@@ -282,6 +304,14 @@ def build_clip(clip: ClipRecord, cfg: dict, force: bool = False) -> tuple[list[R
             )
 
     diagnostics["n_reps"] = len(rows)
+    # Derived from the rows actually emitted, so it covers the whole clip
+    # without any cross-segment bookkeeping. None rather than True when there
+    # are no reps: check_alternation returns intact vacuously for 0 or 1 rep,
+    # and a degenerate clip must not silently pass the gate.
+    diagnostics["alternation_intact"] = (
+        None if not rows
+        else not any("alternation_broken" in r.flags.split(";") for r in rows)
+    )
     return rows, diagnostics
 
 

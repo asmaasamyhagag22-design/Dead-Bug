@@ -23,6 +23,7 @@ from deadbug.dataset.schema import (
     RepRecord,
     SchemaError,
     assert_not_circular,
+    read_clips,
     validate_clips,
     validate_reps,
 )
@@ -300,7 +301,91 @@ def test_score_rep_abstains_when_the_bin_has_no_spread():
     )
     verdict = NB.score_rep(band, 0.5, 0.5)
     assert verdict["exceeds"] is False
-    assert verdict["reason"] == "bin has no spread"
+    assert "needs 2" in verdict["reason"]
+
+
+def test_empty_bins_abstain_through_the_real_fit_band_path():
+    """The abstention contract must hold for a band built by fit_band.
+
+    Regression test for a defect the hand-built-Band test above could not see.
+    ``fit_band`` interpolates the per-bin statistics across empty bins so the
+    plotted curve is continuous, which leaves a bin with *zero* observations
+    carrying a finite, entirely fabricated std. Keying abstention on "is the std
+    NaN" therefore never fired: on the project's own data 13 of 20 bins were
+    empty and all 20 returned a confident verdict.
+    """
+    # Deliberately clustered, so the middle of the range is unvisited.
+    rng = np.random.default_rng(7)
+    excursion, signal, persons = [], [], []
+    for p in range(3):
+        for centre in (0.30, 1.50):
+            e = rng.normal(centre, 0.01, 8)
+            excursion += list(e)
+            signal += list(0.002 * e + rng.normal(0, 1e-5, 8))
+            persons += [f"p{p}"] * 8
+
+    band = NB.fit_band(excursion, signal, persons, n_bins=20)
+    supported = NB.supported_mask(band)
+    assert not supported.all(), "fixture failed to leave any bin empty"
+
+    # Interpolation still produced a drawable curve...
+    assert np.isfinite(band.std).all()
+    # ...but every unsupported bin must refuse to decide.
+    for b in np.flatnonzero(~supported):
+        centre = 0.5 * (band.edges[b] + band.edges[b + 1])
+        verdict = NB.score_rep(band, centre, 1e6)   # absurdly large signal
+        assert verdict["exceeds"] is False, f"bin {b} issued a verdict on {verdict['support']} obs"
+        assert not np.isfinite(verdict["z"])
+        assert verdict["support"] < NB.MIN_BIN_SUPPORT
+
+    # And a supported bin still works, or the guard has disabled everything.
+    b = int(np.flatnonzero(supported)[0])
+    centre = 0.5 * (band.edges[b] + band.edges[b + 1])
+    assert NB.score_rep(band, centre, 1e6)["exceeds"] is True
+
+
+def test_blank_label_source_is_not_silently_promoted_to_intent(tmp_path):
+    """A blank provenance cell must not become the claim that intent was recorded."""
+    header = "clip_id,file,person_id,condition,view,label_source,qc_status\n"
+    path = tmp_path / "clips.csv"
+
+    path.write_text(header + "c1,f.mp4,p1,correct,side,,ok\n", encoding="utf-8")
+    with pytest.raises(SchemaError, match="label_source"):
+        read_clips(path)
+
+    path.write_text(header + "c1,f.mp4,p1,correct,side,intent,\n", encoding="utf-8")
+    with pytest.raises(SchemaError, match="qc_status"):
+        read_clips(path)
+
+    # The fully-specified row still loads.
+    path.write_text(header + "c1,f.mp4,p1,correct,side,intent,ok\n", encoding="utf-8")
+    assert read_clips(path)[0].clip_id == "c1"
+
+
+def test_qc_flag_gates_are_wired_to_keys_build_actually_produces():
+    """Every flag gate must name a key build_clip emits.
+
+    A gate reading a key nobody produces reports ':missing' on every clip and
+    silently stops being a gate. Two of the four did exactly that.
+    """
+    from deadbug.qc.report import assert_gates_wired
+
+    produced = {
+        "clip_id", "n_frames", "fps", "frame_size", "detection_rate",
+        "mean_visibility_core", "view_score", "torso_len_cv", "view",
+        "activity", "mask_rate", "floor", "n_reps", "alternation_intact",
+    }
+    assert assert_gates_wired({k: None for k in produced}) == []
+
+
+def test_qc_row_does_not_let_a_measurement_overwrite_the_verdict():
+    from deadbug.qc.report import ClipQC
+
+    qc = ClipQC(clip_id="c1", status="reject", measures={"status": "ok", "n_reps": 3})
+    row = qc.as_row()
+    assert row["status"] == "reject"
+    assert row["measure_status"] == "ok"
+    assert row["n_reps"] == 3
 
 
 def test_band_round_trips_through_json(tmp_path):

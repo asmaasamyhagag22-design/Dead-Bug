@@ -33,11 +33,29 @@ from typing import Any, Iterable
 
 import numpy as np
 
-#: Checks that downgrade a clip to ``flag``.
-FLAG_CHECKS = ("detection_rate", "mean_visibility_core", "torso_len_cv", "alternation")
+#: Sentinel distinguishing "the key was never supplied" from "the value is
+#: None". Both are failures, but they are different failures: a missing key
+#: means the gate never ran, and a None means the clip had nothing to measure.
+_ABSENT = object()
+
+#: Checks that downgrade a clip to ``flag``. Every name here must be a key that
+#: :func:`deadbug.dataset.build.build_clip` actually puts in its diagnostics --
+#: a gate wired to a key nobody produces reports ``:missing`` on every clip and
+#: silently stops being a gate. :func:`assert_gates_wired` is the guard.
+FLAG_CHECKS = ("detection_rate", "mean_visibility_core", "torso_len_cv", "alternation_intact")
 
 #: Checks that reject it outright.
 REJECT_CHECKS = ("floor_inlier_ratio", "rep_count")
+
+
+def assert_gates_wired(measures: dict) -> list[str]:
+    """Return the flag gates that this diagnostics dict cannot feed.
+
+    Called by :func:`run` so a mis-wired gate fails loudly once, rather than
+    quietly emitting ``<name>:missing`` on every clip forever. The floor and
+    rep-count keys are checked separately because they are nested / derived.
+    """
+    return [name for name in FLAG_CHECKS if name not in measures]
 
 
 @dataclass
@@ -50,10 +68,17 @@ class ClipQC:
     flags: list[str] = field(default_factory=list)
     rejects: list[str] = field(default_factory=list)
 
+    #: Columns owned by the verdict. A diagnostics key of the same name is
+    #: prefixed rather than allowed to overwrite it -- silently replacing
+    #: ``status`` with something a measurement happened to be called would put a
+    #: wrong verdict in qc.csv with nothing to show for it.
+    RESERVED = ("clip_id", "status", "flags", "rejects")
+
     def as_row(self) -> dict[str, Any]:
         row = {"clip_id": self.clip_id, "status": self.status,
                "flags": ";".join(self.flags), "rejects": ";".join(self.rejects)}
-        row.update({k: _round(v) for k, v in self.measures.items()})
+        for key, value in self.measures.items():
+            row[f"measure_{key}" if key in self.RESERVED else key] = _round(value)
         return row
 
 
@@ -74,9 +99,14 @@ def evaluate_clip(measures: dict[str, Any], cfg: dict, clip_id: str = "") -> Cli
     _gate_max(qc, "torso_len_cv", cfg_get(cfg, "qc.max_torso_len_cv"), "flag")
 
     if cfg_get(cfg, "qc.require_alternation"):
-        intact = measures.get("alternation_intact")
-        if intact is None:
+        # build.py sets this to None when a clip produced no reps at all --
+        # check_alternation returns intact vacuously for 0 or 1 rep, so an
+        # empty clip must not be recorded as having passed the gate.
+        intact = measures.get("alternation_intact", _ABSENT)
+        if intact is _ABSENT:
             qc.flags.append("alternation:missing")
+        elif intact is None:
+            qc.flags.append("alternation:no_reps")
         elif not intact:
             qc.flags.append("alternation:broken")
 
@@ -229,6 +259,7 @@ def run(diagnostics: Iterable[dict], cfg: dict) -> dict:
     """Evaluate, write both reports, and return the summary."""
     from ..config import cfg_get, REPO_ROOT
 
+    diagnostics = list(diagnostics)
     results = evaluate_all(diagnostics, cfg)
     csv_path = REPO_ROOT / cfg_get(cfg, "qc.csv_out")
     html_path = REPO_ROOT / cfg_get(cfg, "qc.html_out")
@@ -238,6 +269,11 @@ def run(diagnostics: Iterable[dict], cfg: dict) -> dict:
     summary = summarise(results)
     summary["csv"] = str(csv_path)
     summary["html"] = str(html_path)
+
+    # A gate nobody can feed is not a strict gate, it is an absent one.
+    unwired = sorted({g for d in diagnostics for g in assert_gates_wired(d)})
+    if unwired:
+        summary["unwired_gates"] = unwired
     return summary
 
 

@@ -106,13 +106,14 @@ def _binned_stats(
 
 
 def _interpolate_gaps(values: np.ndarray, count: np.ndarray) -> np.ndarray:
-    """Fill empty bins from their neighbours.
+    """Fill empty bins from their neighbours, **for display only**.
 
-    With a handful of subjects some excursion bins are simply unvisited. Leaving
-    them NaN would make the band unusable exactly where a rep happens to land;
-    interpolating between observed bins is the honest minimum, and
-    ``Band.count`` keeps the evidence per bin visible so a thinly-supported bin
-    can be recognised as such.
+    With a handful of subjects some excursion bins are simply unvisited, and a
+    curve full of holes is unreadable. So the gaps are interpolated -- but the
+    filled values are fabricated, and :func:`score_rep` refuses to decide
+    anything from them. ``Band.count`` is the record of what was actually
+    observed, and it is the field that governs, not the presence of a finite
+    std. See :data:`MIN_BIN_SUPPORT`.
     """
     out = np.asarray(values, dtype=np.float64).copy()
     known = np.flatnonzero(np.isfinite(out) & (count > 0))
@@ -194,34 +195,65 @@ def band_loso(
     return bands
 
 
+#: A bin needs this many observations before it may issue a verdict. Two,
+#: because a ddof=1 standard deviation is undefined below it.
+MIN_BIN_SUPPORT = 2
+
+
 def score_rep(band: Band, excursion: float, signal: float) -> dict:
     """Judge one rep against a band.
 
     ``z`` is ``(signal − mean) / std`` in the rep's excursion bin, and
     ``exceeds`` is ``signal > mean + sigma*std``. Both are NaN / False when the
-    bin has no spread -- an unsupported bin must abstain, not pass.
+    bin has too little evidence -- an unsupported bin must abstain, not pass.
+
+    **Abstention is keyed on ``count``, not on the std being NaN.**
+    :func:`fit_band` interpolates the per-bin statistics across empty bins so
+    the plotted curve is continuous, which means a bin with zero observations
+    still carries a finite, entirely fabricated std. Measured on this project's
+    own 9 side-view reps: 13 of 20 bins are empty, and every one of them would
+    otherwise return a confident z. The interpolated values stay -- they are
+    what makes the figure readable -- but they may not decide anything.
     """
     b = band.bin_of(excursion)
     if b < 0 or not np.isfinite(signal):
         return {"bin": b, "z": float("nan"), "limit": float("nan"), "exceeds": False,
                 "support": 0, "extrapolated": False, "reason": "no bin"}
 
+    support = int(band.count[b])
     mean = band.mean[b]
     std = band.std[b]
-    limit = mean + band.sigma * std if np.isfinite(std) else float("nan")
-    z = (signal - mean) / std if np.isfinite(std) and std > 0 else float("nan")
+    usable = support >= MIN_BIN_SUPPORT and np.isfinite(std) and std > 0
+
+    limit = mean + band.sigma * std if usable else float("nan")
+    z = (signal - mean) / std if usable else float("nan")
 
     edges = band.edges
     extrapolated = excursion < edges[0] or excursion > edges[-1]
+    if usable:
+        reason = ""
+    elif support < MIN_BIN_SUPPORT:
+        reason = f"bin has {support} observation(s), needs {MIN_BIN_SUPPORT}"
+    else:
+        reason = "bin has no spread"
     return {
         "bin": b,
         "z": float(z),
         "limit": float(limit),
-        "exceeds": bool(np.isfinite(limit) and signal > limit),
-        "support": int(band.count[b]),
+        "exceeds": bool(usable and signal > limit),
+        "support": support,
         "extrapolated": bool(extrapolated),
-        "reason": "" if np.isfinite(z) else "bin has no spread",
+        "reason": reason,
     }
+
+
+def supported_mask(band: Band) -> np.ndarray:
+    """``(n_bins,)`` bool -- which bins have enough evidence to decide anything.
+
+    Plotting code should use this to stop drawing the control limit across bins
+    that were interpolated out of nothing.
+    """
+    return np.asarray(band.count) >= MIN_BIN_SUPPORT
 
 
 def save_band(band: Band | dict[str, Band], path: str | Path) -> Path:

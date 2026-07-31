@@ -185,8 +185,15 @@ def read_clips(path: str | Path) -> list[ClipRecord]:
             "run `deadbug clips-template` to generate a skeleton."
         )
     with open(p, "r", encoding="utf-8", newline="") as fh:
+        # Blank cells are passed through, NOT dropped. Dropping them routes the
+        # value to the dataclass default, and two of those defaults are
+        # affirmative claims: a blank `label_source` would become "intent" --
+        # the assertion that a human recorded the subject's intent before
+        # filming -- and a blank `qc_status` would become "ok". An absent
+        # provenance claim must not be silently converted into a present one.
+        # `if k` still drops DictReader's overflow bucket for a too-long row.
         rows = [
-            {k: v for k, v in row.items() if k and v not in (None, "")}
+            {k: v for k, v in row.items() if k and v is not None}
             for row in csv.DictReader(fh)
         ]
     if not rows:
