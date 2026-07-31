@@ -169,7 +169,20 @@ def main() -> int:
                 frame = cv2.flip(frame, 1)          # mirror, so the user's left is left
 
             t0 = time.perf_counter()
-            now = time.monotonic() - t_start
+            # THE CLOCK THE COUNTER IS JUDGED ON.
+            #
+            # For a camera the wall clock is the truth. For a file it is not:
+            # the elapsed wall time depends on how fast this machine runs
+            # MediaPipe, not on the movement. Measured here, heavy runs at
+            # ~12 fps against a 24 fps clip, so every extension phase measures
+            # twice as long as it really is, `max_extend_s = 6.0` rejects reps
+            # that took 3 seconds, and videoplayback (4) counted 0 reps where
+            # the offline pipeline finds 4.
+            #
+            # Media time also makes a file replay deterministic, which is what
+            # the module docstring promises: the demo can be rehearsed and
+            # debugged without a camera and give the same answer every time.
+            now = (time.monotonic() - t_start) if is_live else (frame_index / fps)
             ts_ms = max(last_ts + 1, int(now * 1000))   # must be strictly increasing
             last_ts = ts_ms
 
@@ -246,6 +259,22 @@ def main() -> int:
     print(f"\n{report['correct_reps']} / {report['total_reps']} reps correct")
     for error, count in sorted(report["error_counts"].items(), key=lambda kv: -kv[1]):
         print(f"  {count:>3}x  {error}")
+
+    if not report["total_reps"]:
+        # Distinguish "nothing happened" from "the protocol ate the clip". Only
+        # reps performed after calibration AND after the personal baseline are
+        # judged, so a short clip can legitimately produce no verdicts while the
+        # counter was working perfectly.
+        counted = session.counter.count
+        print(
+            f"\nNo rep was judged. The session reached phase '{state.phase.value}' "
+            f"and the counter saw {counted} rep(s).\n"
+            f"  {args.setup_seconds:.0f}s went to floor calibration and the next "
+            f"{args.baseline_reps} rep(s) set your personal baseline;\n"
+            f"  only reps after that are scored. On a clip this short that can "
+            f"leave nothing over.\n"
+            f"  Use a longer clip, or lower --setup-seconds / --baseline-reps."
+        )
     print(f"wrote {out}")
 
     if report["total_reps"]:

@@ -165,7 +165,13 @@ class LiveSession:
     # ------------------------------------------------------------------
 
     def _do_setup(self, lumbar_gap: float, rot_dev: float, now: float) -> SessionState:
-        elapsed = now - (self._t0 or now)
+        # `self._t0 or now` would be wrong: t0 is a timestamp, and 0.0 is a
+        # perfectly good one. Python's `or` treats it as falsy and falls back to
+        # `now`, pinning elapsed at 0.0 so the session never leaves SETUP. It
+        # never fired while the clock was time.monotonic() -- that is never
+        # exactly zero -- and fired immediately once a file replay started
+        # counting media time from frame 0.
+        elapsed = now - (now if self._t0 is None else self._t0)
         if np.isfinite(lumbar_gap):
             self._setup_lumbar.append(lumbar_gap)
         if np.isfinite(rot_dev):

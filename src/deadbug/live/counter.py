@@ -112,7 +112,23 @@ class OnlineRepCounter:
         #: them is meaningless. This is a physiological prior, not a tuned knob.
         self.max_extend_s = max_extend_s
 
-        self._history: deque[float] = deque(maxlen=max(8, int(window_s * fps)))
+        self.window_s = window_s
+        self.trough_window_s = trough_window_s
+
+        # Both windows are trimmed by ELAPSED TIME, not by a sample count.
+        #
+        # Sizing them as `seconds * fps` assumes one sample arrives per source
+        # frame, which is true only when the loop keeps up with the video. It
+        # does not: measured here, MediaPipe heavy runs at ~12 fps against a
+        # 24 fps clip, so a deque holding `4.0 * 24 = 96` samples spans 8 real
+        # seconds, not 4. Every duration the counter derives is then wrong by
+        # the ratio of nominal to achieved frame rate -- and `max_extend_s`
+        # rejects reps on exactly such a duration, which is how a clip with 4
+        # reps counted 0.
+        #
+        # maxlen stays as a memory bound: at most `seconds * fps` samples can
+        # arrive within the window, and fewer when the loop is behind.
+        self._history: deque[tuple[float, float]] = deque(maxlen=max(8, int(window_s * fps)))
         #: Recent samples used to anchor the trough. Tracking a running minimum
         #: since the last rep instead looks correct until the subject spends a
         #: while not exercising -- an instructional video is mostly talking --
@@ -139,10 +155,17 @@ class OnlineRepCounter:
         """Rolling p5-p95 range, the basis for the adaptive threshold."""
         if len(self._history) < 8:
             return 0.0
-        ordered = sorted(self._history)
+        ordered = sorted(value for value, _t in self._history)
         lo = ordered[int(0.05 * (len(ordered) - 1))]
         hi = ordered[int(0.95 * (len(ordered) - 1))]
         return hi - lo
+
+    def _trim(self, now: float) -> None:
+        """Drop samples older than each window, measured in seconds."""
+        while self._history and now - self._history[0][1] > self.window_s:
+            self._history.popleft()
+        while self._recent and now - self._recent[0][2] > self.trough_window_s:
+            self._recent.popleft()
 
     def threshold(self) -> float:
         """Rise required to start a rep: adaptive, but never below ``min_rise``."""
@@ -152,7 +175,8 @@ class OnlineRepCounter:
         """Feed one sample. Returns a rep at the moment one is confirmed."""
         if value != value:                       # NaN -- detection dropped out
             return None
-        self._history.append(value)
+        self._history.append((value, now))
+        self._trim(now)
         threshold = self.threshold()
 
         if self._state is State.WAITING:
