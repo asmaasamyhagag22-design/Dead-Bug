@@ -21,6 +21,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest"]
 parquet = ["pyarrow"]
+app = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "python-multipart>=0.0.9"]
 # Kept out of requirements.txt on purpose: a machine that only ever runs the app
 # on local files never needs it, and ingest/download.py asks for a progressive
 # mp4 so ffmpeg is never invoked either.

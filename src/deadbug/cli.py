@@ -249,6 +249,27 @@ def cmd_coach(args) -> int:
     return run_live.main()
 
 
+def cmd_app(args) -> int:
+    """Serve the browser UI: camera, YouTube link, or uploaded file."""
+    try:
+        import uvicorn  # noqa: PLC0415
+    except ImportError:
+        print(
+            "the web app needs fastapi and uvicorn:\n"
+            "    pip install -r requirements.txt\n"
+            "  or: pip install 'fastapi' 'uvicorn[standard]' python-multipart",
+            file=sys.stderr,
+        )
+        return 1
+    from .webapp.server import create_app  # noqa: PLC0415
+
+    shown = "localhost" if args.host in ("127.0.0.1", "0.0.0.0") else args.host
+    print(f"\n  Dead Bug Coach   http://{shown}:{args.port}\n")
+    uvicorn.run(create_app(args.config), host=args.host, port=args.port,
+                log_level="warning")
+    return 0
+
+
 def cmd_try(args) -> int:
     """Fetch (if a URL), scan, and then coach. The demo path."""
     cfg = load_config(args.config)
@@ -339,6 +360,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--headless", action="store_true")
     _add_common(p)
     p.set_defaults(func=cmd_coach)
+
+    p = sub.add_parser("app", help="run the web app (camera / YouTube / upload)")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8000)
+    _add_common(p)
+    p.set_defaults(func=cmd_app)
 
     p = sub.add_parser("try", help="fetch (if a URL), scan, then coach")
     p.add_argument("target", help="a YouTube URL or a local video path")

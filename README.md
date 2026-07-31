@@ -57,11 +57,36 @@ rotated / correct) plus three short clips at known 0° / 30° / 45° would unblo
 Gate 1, the C7 sensitivity check, and the `view_score` calibration all at once.
 See [LIMITATIONS.md](LIMITATIONS.md) §1.
 
+## The app
+
+```bash
+python scripts/run_app.py        # -> http://localhost:8000
+```
+
+Three ways in, one engine:
+
+| | |
+|---|---|
+| **Camera** | Lie down side-on and train. Live rep count, per-rep verdict, spoken-style prompts, session report. |
+| **YouTube link** | Paste a URL. Needs `pip install yt-dlp`; the tab says so if it is missing. |
+| **Upload a video** | Any clip from the device, up to 10 min / 300 MB. Returns an annotated video and a downloadable JSON report. |
+
+All three drive the same [`CoachEngine`](src/deadbug/live/engine.py) that
+`run_live.py` uses, so a rep counted in the browser is counted by the code that
+produced the offline numbers. The camera runs MediaPipe **server-side** — the
+browser sends frames and receives landmarks — precisely so that the demo is not
+a second implementation.
+
+Every result carries a **triage** panel: detection rate, camera angle, camera
+steadiness. If the angle is not a side view the app says the back-arch check is
+unreliable rather than reporting a verdict it cannot support.
+
 ## Commands
 
 ```bash
+deadbug app               # the web app
 deadbug scan  <video>     # does this file contain any exercise at all?
-deadbug try   <url|path>  # fetch, scan, then coach -- the demo path
+deadbug try   <url|path>  # fetch, scan, then coach in an OpenCV window
 deadbug build             # the reps table
 deadbug qc                # reports/qc.csv + qc.html
 deadbug band              # the leave-one-subject-out normative band

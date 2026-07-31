@@ -21,3 +21,4 @@ models/*.pt
 data/rehabpile/
 !data/clips.csv
 !data/processed/
+data/webapp/

@@ -25,5 +25,18 @@
     "rot_mean": 0.06443111829608789,
     "rot_std": 0.0008108098409987594,
     "duration_median": 4.337666666666666
-  }
+  },
+  "counted_reps": 3,
+  "floor": {
+    "a": 0.0,
+    "b": 156.0,
+    "inlier_ratio": 1.0,
+    "method": "percentile",
+    "n_points": 767.0
+  },
+  "fps": 23.976023976023978,
+  "frame_size": [
+    640,
+    352
+  ]
 }

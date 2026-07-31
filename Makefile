@@ -22,7 +22,7 @@ help:
 	@echo "setup    venv venv-a"
 	@echo "check    test gate0"
 	@echo "data     triage build qc band  (or: pipeline)"
-	@echo "app      coach demo"
+	@echo "app      app coach demo"
 	@echo "bench    masar-sanity masar-a"
 	@echo "clean    clean-cache clean-interim"
 
@@ -64,6 +64,11 @@ band:
 pipeline: gate0 build qc band
 
 # -- app -------------------------------------------------------------------
+
+# The browser UI: camera, YouTube link, or an uploaded file. All three drive
+# the same CoachEngine the CLI uses.
+app:
+	$(PY) scripts/run_app.py
 
 coach:
 	$(PY) scripts/run_live.py --source 0

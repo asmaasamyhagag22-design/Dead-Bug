@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dead Bug Coach</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --line: #30363d; --ink: #e6edf3;
+    --dim: #8b949e; --accent: #2f81f7; --ok: #3fb950; --bad: #f85149;
+    --warn: #d29922; --radius: 10px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f6f8fa; --panel:#fff; --line:#d0d7de; --ink:#1f2328;
+            --dim:#656d76; --accent:#0969da; --ok:#1a7f37; --bad:#cf222e; --warn:#9a6700; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { padding:1.4rem 1.5rem .9rem; border-bottom:1px solid var(--line); }
+  h1 { margin:0; font-size:1.3rem; letter-spacing:-.01em; }
+  header p { margin:.35rem 0 0; color:var(--dim); font-size:.88rem; max-width:60rem; }
+  main { max-width:76rem; margin:0 auto; padding:1.25rem 1.5rem 4rem; }
+
+  .tabs { display:flex; gap:.4rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+  .tab { padding:.55rem 1.05rem; border:1px solid var(--line); background:var(--panel);
+         color:var(--dim); border-radius:var(--radius); cursor:pointer; font-size:.92rem; }
+  .tab[aria-selected="true"] { color:var(--ink); border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); }
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+          padding:1.1rem 1.2rem; margin-bottom:1rem; }
+  .card h2 { margin:0 0 .5rem; font-size:1rem; }
+  .card p.note { color:var(--dim); font-size:.86rem; margin:.3rem 0 .9rem; }
+
+  label { display:block; font-size:.85rem; color:var(--dim); margin:.7rem 0 .25rem; }
+  input[type=text], input[type=file], input[type=number] {
+    width:100%; padding:.55rem .7rem; background:var(--bg); color:var(--ink);
+    border:1px solid var(--line); border-radius:8px; font:inherit; font-size:.9rem; }
+  .row { display:flex; gap:.8rem; flex-wrap:wrap; }
+  .row > * { flex:1 1 9rem; }
+
+  button { padding:.6rem 1.15rem; border-radius:8px; border:1px solid transparent;
+           background:var(--accent); color:#fff; font:inherit; font-weight:600;
+           font-size:.92rem; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--ink); border-color:var(--line); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .actions { display:flex; gap:.6rem; margin-top:1rem; flex-wrap:wrap; }
+
+  .stage { position:relative; background:#000; border-radius:var(--radius);
+           overflow:hidden; aspect-ratio:16/9; }
+  .stage video, .stage canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; }
+  .stage video { transform:scaleX(-1); }
+
+  .hud { display:grid; grid-template-columns:repeat(auto-fit,minmax(8rem,1fr)); gap:.7rem; margin-top:.9rem; }
+  .stat { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:.6rem .75rem; }
+  .stat .k { font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); }
+  .stat .v { font-size:1.45rem; font-weight:650; font-variant-numeric:tabular-nums; }
+
+  .banner { padding:.7rem .9rem; border-radius:8px; font-size:.9rem; margin-top:.8rem; }
+  .banner.ok  { background:color-mix(in srgb, var(--ok) 14%, transparent);  border:1px solid var(--ok); }
+  .banner.bad { background:color-mix(in srgb, var(--bad) 14%, transparent); border:1px solid var(--bad); }
+  .banner.warn{ background:color-mix(in srgb, var(--warn) 14%, transparent);border:1px solid var(--warn); }
+  .banner.info{ background:color-mix(in srgb, var(--accent) 12%, transparent); border:1px solid var(--accent); }
+
+  progress { width:100%; height:.55rem; margin-top:.7rem; }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th, td { text-align:left; padding:.4rem .55rem; border-bottom:1px solid var(--line); }
+  th { color:var(--dim); font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; }
+  .pill { display:inline-block; padding:.1rem .5rem; border-radius:999px; font-size:.78rem; font-weight:600; }
+  .pill.ok  { background:color-mix(in srgb,var(--ok) 20%,transparent);  color:var(--ok); }
+  .pill.bad { background:color-mix(in srgb,var(--bad) 20%,transparent); color:var(--bad); }
+  .scroll { overflow-x:auto; }
+  video.result { width:100%; border-radius:8px; background:#000; margin-top:.6rem; }
+  .muted { color:var(--dim); font-size:.85rem; }
+  code { background:var(--bg); padding:.1rem .3rem; border-radius:4px; font-size:.85em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Dead Bug Coach</h1>
+  <p>Counts your reps and checks form — lower back lifting off the floor, hips rocking,
+     moving too fast. The back-arch check reads the <em>silhouette</em>, not the skeleton,
+     because no pose landmark sits on the spine. Needs a <strong>side view</strong>.</p>
+</header>
+
+<main>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true"  data-panel="cam">Camera</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="yt">YouTube link</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="up">Upload a video</button>
+  </div>
+
+  <!-- ---------------------------------------------------------------- -->
+  <section class="panel active" id="cam">
+    <div class="card">
+      <h2>Train with the camera</h2>
+      <p class="note">Lie on your back, side-on to the camera, whole body in frame, floor visible.
+        Stay still for the first few seconds — that is the floor calibration. Then do three
+        easy reps to set your personal baseline; everything after that is scored against it.</p>
+      <div class="stage">
+        <video id="feed" autoplay playsinline muted></video>
+        <canvas id="overlay"></canvas>
+      </div>
+      <div class="hud">
+        <div class="stat"><div class="k">Phase</div><div class="v" id="c-phase">—</div></div>
+        <div class="stat"><div class="k">Reps</div><div class="v" id="c-reps">0</div></div>
+        <div class="stat"><div class="k">Correct</div><div class="v" id="c-ok">0</div></div>
+        <div class="stat"><div class="k">Loop</div><div class="v" id="c-fps">—</div></div>
+      </div>
+      <div class="banner info" id="c-prompt">Press start when you are in position.</div>
+      <div class="actions">
+        <button id="c-start">Start camera</button>
+        <button id="c-reset" class="ghost" disabled>Restart session</button>
+        <button id="c-stop"  class="ghost" disabled>Stop &amp; show report</button>
+      </div>
+      <div class="row" style="margin-top:.8rem">
+        <div><label for="c-setup">Calibration seconds</label>
+             <input type="number" id="c-setup" value="3" min="1" max="15" step="1"></div>
+        <div><label for="c-base">Baseline reps</label>
+             <input type="number" id="c-base" value="3" min="1" max="10" step="1"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- -->
+  <section class="panel" id="yt">
+    <div class="card">
+      <h2>Analyse a YouTube video</h2>
+      <p class="note">Heads up: instructional videos are a poor source of reps. The coach
+        talks through the movement more than they perform it, and what the segmenter finds
+        is often demonstration drift rather than a set.</p>
+      <label for="yt-url">Video URL</label>
+      <input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=...">
+      <div class="row">
+        <div><label for="yt-setup">Calibration seconds</label>
+             <input type="number" id="yt-setup" value="3" min="0" max="15"></div>
+        <div><label for="yt-base">Baseline reps</label>
+             <input type="number" id="yt-base" value="3" min="1" max="10"></div>
+      </div>
+      <div class="actions"><button id="yt-go">Analyse</button></div>
+      <div id="yt-status"></div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------------- -->
+  <section class="panel" id="up">
+    <div class="card">
+      <h2>Upload a video from this device</h2>
+      <p class="note">Best results: side view, whole body, floor visible, a few seconds
+        lying still at the start. Up to 10 minutes / 300 MB.</p>
+      <label for="up-file">Video file</label>
+      <input type="file" id="up-file" accept="video/*">
+      <div class="row">
+        <div><label for="up-setup">Calibration seconds</label>
+             <input type="number" id="up-setup" value="3" min="0" max="15"></div>
+        <div><label for="up-base">Baseline reps</label>
+             <input type="number" id="up-base" value="3" min="1" max="10"></div>
+      </div>
+      <div class="actions"><button id="up-go">Analyse</button></div>
+      <div id="up-status"></div>
+    </div>
+  </section>
+
+  <div id="result"></div>
+</main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+
+/* ---------------- tabs ---------------- */
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t === tab)));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === tab.dataset.panel));
+  };
+});
+
+/* ---------------- skeleton ---------------- */
+/* MediaPipe-33 edges, mirrored from deadbug.pose.skeleton.MP33_CONNECTIONS so the
+   overlay draws the same body the signals are computed on. */
+const EDGES = [
+  [0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10],
+  [11,12],[11,13],[13,15],[15,17],[15,19],[15,21],[17,19],
+  [12,14],[14,16],[16,18],[16,20],[16,22],[18,20],
+  [11,23],[12,24],[23,24],
+  [23,25],[24,26],[25,27],[26,28],
+  [27,29],[28,30],[29,31],[30,32],[27,31],[28,32]
+];
+const VIS = 0.5;
+
+function draw(canvas, kpts, highlight) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!kpts) return;
+  const W = canvas.width, H = canvas.height;
+  /* The <video> is mirrored in CSS for a natural selfie view, so mirror here too. */
+  const X = p => (1 - p[0]) * W, Y = p => p[1] * H;
+
+  ctx.lineWidth = Math.max(2, W / 320);
+  ctx.strokeStyle = highlight ? '#f0883e' : '#3fb950';
+  ctx.beginPath();
+  for (const [a, b] of EDGES) {
+    const p = kpts[a], q = kpts[b];
+    if (!p || !q || p[2] < VIS || q[2] < VIS) continue;
+    ctx.moveTo(X(p), Y(p)); ctx.lineTo(X(q), Y(q));
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = '#2f81f7';
+  for (const p of kpts) {
+    if (p[2] < VIS) continue;
+    ctx.beginPath(); ctx.arc(X(p), Y(p), Math.max(2.5, W / 260), 0, 7); ctx.fill();
+  }
+}
+
+/* ---------------- camera ---------------- */
+let ws = null, stream = null, sending = false, rafTimer = null;
+const feed = $('#feed'), overlay = $('#overlay');
+const grab = document.createElement('canvas');
+
+function setCamButtons(running) {
+  $('#c-start').disabled = running;
+  $('#c-stop').disabled = !running;
+  $('#c-reset').disabled = !running;
+}
+
+$('#c-start').onclick = async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 960 }, height: { ideal: 540 }, facingMode: 'environment' },
+      audio: false
+    });
+  } catch (err) {
+    banner($('#c-prompt'), 'bad', 'Could not open the camera: ' + err.message +
+      '. On a phone the page must be served over HTTPS or localhost.');
+    return;
+  }
+  feed.srcObject = stream;
+  await feed.play();
+  overlay.width = feed.videoWidth || 960;
+  overlay.height = feed.videoHeight || 540;
+
+  ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws/camera');
+  ws.onopen = () => { sending = true; pump(); setCamButtons(true); };
+  ws.onclose = () => { sending = false; setCamButtons(false); };
+  ws.onerror = () => banner($('#c-prompt'), 'bad', 'Connection to the server dropped.');
+  ws.onmessage = ev => onCamMessage(JSON.parse(ev.data));
+};
+
+$('#c-reset').onclick = () => ws && ws.readyState === 1 && ws.send(JSON.stringify({ type: 'reset' }));
+
+$('#c-stop').onclick = () => {
+  sending = false;
+  clearTimeout(rafTimer);
+  if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'stop' }));
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  setCamButtons(false);
+};
+
+let inflight = false, lastSent = 0, loopFps = 0;
+function pump() {
+  if (!sending) return;
+  /* One frame in flight at a time. Queueing frames the server has not consumed
+     builds a backlog and the overlay drifts behind the body. */
+  if (!inflight && ws && ws.readyState === 1 && feed.videoWidth) {
+    const w = 640, h = Math.round(feed.videoHeight / feed.videoWidth * 640);
+    grab.width = w; grab.height = h;
+    const g = grab.getContext('2d');
+    g.save(); g.scale(-1, 1); g.drawImage(feed, -w, 0, w, h); g.restore();
+    inflight = true; lastSent = performance.now();
+    ws.send(JSON.stringify({
+      type: 'frame', data: grab.toDataURL('image/jpeg', 0.6),
+      fps: 15, setup_seconds: +$('#c-setup').value, baseline_reps: +$('#c-base').value
+    }));
+  }
+  rafTimer = setTimeout(pump, 40);
+}
+
+function onCamMessage(m) {
+  if (m.type === 'report') { sending = false; renderReport(m.report, 'Camera session'); return; }
+  if (m.type === 'reset') { $('#c-reps').textContent = '0'; $('#c-ok').textContent = '0'; return; }
+  if (m.type !== 'frame') return;
+  inflight = false;
+
+  const dt = performance.now() - lastSent;
+  loopFps = loopFps ? loopFps * 0.85 + (1000 / Math.max(dt, 1)) * 0.15 : 1000 / Math.max(dt, 1);
+
+  draw(overlay, m.kpts, m.highlight);
+  $('#c-phase').textContent = m.phase;
+  $('#c-reps').textContent = m.reps_done;
+  $('#c-ok').textContent = m.reps_correct;
+  $('#c-fps').textContent = loopFps.toFixed(0) + ' fps';
+
+  let text = m.prompt || '';
+  let kind = 'info';
+  if (!m.detected) { text = 'No person detected — step into frame.'; kind = 'warn'; }
+  else if (m.verdict) { text = m.verdict.message; kind = m.verdict.ok ? 'ok' : 'bad'; }
+  banner($('#c-prompt'), kind, text);
+}
+
+function banner(el, kind, text) { el.className = 'banner ' + kind; el.textContent = text; }
+
+/* ---------------- jobs (youtube + upload) ---------------- */
+async function submitJob(url, body, statusEl, label) {
+  statusEl.innerHTML = '<progress></progress><p class="muted">Submitting…</p>';
+  let res;
+  try { res = await fetch(url, { method: 'POST', body }); }
+  catch (e) { statusEl.innerHTML = `<div class="banner bad">Network error: ${e.message}</div>`; return; }
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    statusEl.innerHTML = `<div class="banner bad">${escapeHtml(data.detail || 'Request failed')}</div>`;
+    return;
+  }
+  poll(data.id, statusEl, label);
+}
+
+async function poll(id, statusEl, label) {
+  const res = await fetch('/api/job/' + id);
+  const job = await res.json();
+  const pct = Math.round((job.progress || 0) * 100);
+
+  if (job.status === 'error') {
+    statusEl.innerHTML = `<div class="banner bad">${escapeHtml(job.error)}</div>`;
+    return;
+  }
+  if (job.status === 'done') {
+    statusEl.innerHTML = `<div class="banner ok">Analysis complete.</div>`;
+    renderReport(job.result, label);
+    return;
+  }
+  statusEl.innerHTML =
+    `<progress value="${pct}" max="100"></progress>
+     <p class="muted">${escapeHtml(job.message || job.status)} — ${pct}%
+     <br>MediaPipe runs at roughly 12 fps here, so expect about 3&times; the clip's length.</p>`;
+  setTimeout(() => poll(id, statusEl, label), 1200);
+}
+
+$('#yt-go').onclick = () => {
+  const url = $('#yt-url').value.trim();
+  if (!url) return;
+  const fd = new FormData();
+  fd.append('url', url);
+  fd.append('setup_seconds', $('#yt-setup').value);
+  fd.append('baseline_reps', $('#yt-base').value);
+  submitJob('/api/youtube', fd, $('#yt-status'), 'YouTube video');
+};
+
+$('#up-go').onclick = () => {
+  const file = $('#up-file').files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('setup_seconds', $('#up-setup').value);
+  fd.append('baseline_reps', $('#up-base').value);
+  submitJob('/api/upload', fd, $('#up-status'), file.name);
+};
+
+/* ---------------- report ---------------- */
+function renderReport(r, label) {
+  if (!r) return;
+  const total = r.total_reps || 0, ok = r.correct_reps || 0;
+  const acc = total ? Math.round(ok / total * 100) : null;
+  const t = r.triage || {};
+
+  const warnings = (t.warnings || []).map(w =>
+    `<div class="banner warn">${escapeHtml(w)}</div>`).join('');
+
+  const errRows = Object.entries(r.error_counts || {})
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => `<tr><td>${escapeHtml(prettyError(k))}</td><td>${v}</td></tr>`).join('');
+
+  const repRows = (r.timeline || r.per_rep || []).map(v => `
+    <tr>
+      <td>${v.rep ?? ''}</td>
+      <td>${v.side ?? ''}</td>
+      <td>${v.at_s != null ? v.at_s + 's' : ''}</td>
+      <td><span class="pill ${v.ok ? 'ok' : 'bad'}">${v.ok ? 'good' : 'error'}</span></td>
+      <td>${escapeHtml((v.errors || []).map(prettyError).join(', ') || '—')}</td>
+    </tr>`).join('');
+
+  $('#result').innerHTML = `
+    <div class="card">
+      <h2>Result — ${escapeHtml(r.title || label || r.source || 'session')}</h2>
+      ${r.explanation ? `<div class="banner info">${escapeHtml(r.explanation)}</div>` : ''}
+      <div class="hud">
+        <div class="stat"><div class="k">Reps judged</div><div class="v">${total}</div></div>
+        <div class="stat"><div class="k">Correct</div><div class="v" style="color:var(--ok)">${ok}</div></div>
+        <div class="stat"><div class="k">With an error</div><div class="v" style="color:var(--bad)">${total - ok}</div></div>
+        <div class="stat"><div class="k">Accuracy</div><div class="v">${acc == null ? '—' : acc + '%'}</div></div>
+        <div class="stat"><div class="k">Counter saw</div><div class="v">${r.counted_reps ?? '—'}</div></div>
+        <div class="stat"><div class="k">Duration</div><div class="v">${r.duration_s ?? '—'}s</div></div>
+      </div>
+      ${warnings}
+      ${errRows ? `<h2 style="margin-top:1.2rem">Errors</h2>
+        <div class="scroll"><table><tr><th>Error</th><th>Times</th></tr>${errRows}</table></div>` : ''}
+      ${repRows ? `<h2 style="margin-top:1.2rem">Every rep</h2>
+        <div class="scroll"><table>
+          <tr><th>#</th><th>Side</th><th>At</th><th>Verdict</th><th>Detail</th></tr>
+          ${repRows}</table></div>` : ''}
+      <h2 style="margin-top:1.2rem">Was the footage usable?</h2>
+      <div class="scroll"><table>
+        <tr><th>Person detected</th><td>${pct(t.detection_rate)}</td></tr>
+        <tr><th>Core joint visibility</th><td>${num(t.mean_visibility_core)}</td></tr>
+        <tr><th>Camera angle</th><td>${escapeHtml(t.view || '—')} (view score ${num(t.view_score)})</td></tr>
+        <tr><th>Camera steadiness</th><td>torso-length CV ${num(t.torso_len_cv)}</td></tr>
+      </table></div>
+      ${r.annotated_url ? `<h2 style="margin-top:1.2rem">Annotated video</h2>
+        <video class="result" controls src="${r.annotated_url}"></video>` : ''}
+      ${r.job_id ? `<div class="actions">
+        <a href="/api/result/${r.job_id}/json" download>
+          <button class="ghost">Download the full report (JSON)</button></a></div>` : ''}
+      <p class="muted" style="margin-top:1rem">
+        This tool measures deviation from a reference movement pattern. It is not a
+        diagnostic or clinical tool, was not validated on a patient population, and
+        must not be used to guide medical decisions.</p>
+    </div>`;
+  $('#result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+const PRETTY = {
+  lumbar_arch: 'lower back lifted off the floor',
+  rotation: 'hips rocked / pelvis rotated',
+  too_fast: 'moved too fast (no control)'
+};
+const prettyError = k => PRETTY[k] || k;
+const num = v => (v == null ? '—' : (+v).toFixed(3));
+const pct = v => (v == null ? '—' : Math.round(v * 100) + '%');
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* Tell the user up front if the YouTube path is unavailable. */
+fetch('/api/health').then(r => r.json()).then(h => {
+  if (!h.youtube) {
+    $('#yt-status').innerHTML =
+      '<div class="banner warn">yt-dlp is not installed on the server, so the ' +
+      'YouTube tab will not work. Install it with <code>pip install yt-dlp</code>, ' +
+      'or download the video and use the Upload tab.</div>';
+  }
+}).catch(() => {});
+</script>
+</body>
+</html>
