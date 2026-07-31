@@ -1,0 +1,13 @@
+clip_id,dedup_group,detection_rate,duration_s,exercise_fraction,file,fps,mean_visibility_core,n_frames,n_reps,torso_len_cv,view,view_score
+video_project_2__1,,0.461,122.9,0.858,data/candidates/Video Project 2 (1).mp4,30.0,0.999,3688,7,0.108,oblique45,0.193
+videoplayback__10,,1.0,18.0,0.991,data/candidates/videoplayback (10).mp4,29.97,1.0,538,4,0.034,side,0.091
+videoplayback__11,,0.981,15.9,1.0,data/candidates/videoplayback (11).mp4,29.97,1.0,478,4,0.033,side,0.108
+videoplayback__12,,0.767,50.3,0.747,data/candidates/videoplayback (12).mp4,29.97,0.987,1507,9,0.463,oblique45,0.144
+videoplayback__13,,0.855,19.8,1.0,data/candidates/videoplayback (13).mp4,29.97,1.0,593,4,0.029,oblique45,0.161
+videoplayback__14,,0.908,87.8,0.869,data/candidates/videoplayback (14).mp4,23.976,0.974,2104,21,0.852,other,0.341
+videoplayback__15,,1.0,33.5,0.958,data/candidates/videoplayback (15).mp4,29.97,1.0,1005,9,0.156,oblique45,0.186
+videoplayback__16,,1.0,109.0,0.0,data/candidates/videoplayback (16).mp4,30.0,1.0,3270,0,0.199,oblique45,0.149
+videoplayback__17,,1.0,47.8,0.8,data/candidates/videoplayback (17).mp4,25.0,1.0,1194,5,0.12,oblique45,0.19
+videoplayback__18,,0.954,87.7,0.0,data/candidates/videoplayback (18).mp4,30.0,0.884,2632,0,0.527,oblique45,0.209
+videoplayback__19,,0.992,72.1,0.333,data/candidates/videoplayback (19).mp4,30.0,0.999,2164,3,0.24,oblique45,0.147
+videoplayback__20,,1.0,14.5,1.0,data/candidates/videoplayback (20).mp4,23.976,0.999,347,4,0.031,oblique45,0.155

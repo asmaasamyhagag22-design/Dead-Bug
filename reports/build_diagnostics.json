@@ -102,6 +102,45 @@
     "n_reps": 0
   },
   {
+    "clip_id": "video_project_2__1",
+    "n_frames": 3688,
+    "fps": 30.0,
+    "frame_size": [
+      1280,
+      720
+    ],
+    "detection_rate": 0.46068329718004336,
+    "mean_visibility_core": 0.999488144420118,
+    "view_score": 0.19310414322329092,
+    "torso_len_cv": 0.08810891558876881,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 7,
+      "exercise_s": 105.5,
+      "clip_s": 122.9,
+      "exercise_fraction": 0.858,
+      "segments": [
+        {
+          "start_s": 13.4,
+          "end_s": 118.9,
+          "n_reps": 7,
+          "duration_s": 105.5
+        }
+      ]
+    },
+    "mask_rate": 0.46068329718004336,
+    "floor": {
+      "a": 0.0,
+      "b": 315.0,
+      "inlier_ratio": 0.4313835770528684,
+      "method": "percentile",
+      "n_points": 1778
+    },
+    "reason": "floor inlier ratio 0.43 below 0.8",
+    "n_reps": 0
+  },
+  {
     "clip_id": "video_project_2__2",
     "n_frames": 2011,
     "fps": 30.0,
@@ -256,6 +295,405 @@
     },
     "n_reps": 5,
     "alternation_intact": false
+  },
+  {
+    "clip_id": "videoplayback__10",
+    "n_frames": 538,
+    "fps": 29.969999313354492,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 1.0,
+    "mean_visibility_core": 0.9996866404622461,
+    "view_score": 0.09125083475872653,
+    "torso_len_cv": 0.03361085959802896,
+    "view": "side",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 4,
+      "exercise_s": 17.8,
+      "clip_s": 18.0,
+      "exercise_fraction": 0.991,
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 17.8,
+          "n_reps": 4,
+          "duration_s": 17.8
+        }
+      ]
+    },
+    "mask_rate": 1.0,
+    "floor": {
+      "a": 0.0,
+      "b": 133.0,
+      "inlier_ratio": 1.0,
+      "method": "percentile",
+      "n_points": 1529
+    },
+    "n_reps": 4,
+    "alternation_intact": true
+  },
+  {
+    "clip_id": "videoplayback__11",
+    "n_frames": 478,
+    "fps": 29.970029830932617,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 0.9811715481171548,
+    "mean_visibility_core": 0.9999718742965381,
+    "view_score": 0.10822463441036895,
+    "torso_len_cv": 0.03261260991838931,
+    "view": "side",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 4,
+      "exercise_s": 15.9,
+      "clip_s": 15.9,
+      "exercise_fraction": 1.0,
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 15.9,
+          "n_reps": 4,
+          "duration_s": 15.9
+        }
+      ]
+    },
+    "mask_rate": 0.9811715481171548,
+    "floor": {
+      "a": 0.0,
+      "b": 145.0,
+      "inlier_ratio": 1.0,
+      "method": "percentile",
+      "n_points": 1570
+    },
+    "n_reps": 4,
+    "alternation_intact": true
+  },
+  {
+    "clip_id": "videoplayback__12",
+    "n_frames": 1507,
+    "fps": 29.970029830932617,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 0.7670869276708693,
+    "mean_visibility_core": 0.9874943974121735,
+    "view_score": 0.14424287854287407,
+    "torso_len_cv": 0.4378193039011435,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 9,
+      "exercise_s": 37.6,
+      "clip_s": 50.3,
+      "exercise_fraction": 0.747,
+      "segments": [
+        {
+          "start_s": 3.3,
+          "end_s": 40.8,
+          "n_reps": 9,
+          "duration_s": 37.6
+        }
+      ]
+    },
+    "mask_rate": 0.7670869276708693,
+    "floor": {
+      "a": 0.0,
+      "b": 148.0,
+      "inlier_ratio": 1.0,
+      "method": "percentile",
+      "n_points": 1794
+    },
+    "n_reps": 9,
+    "alternation_intact": false
+  },
+  {
+    "clip_id": "videoplayback__13",
+    "n_frames": 593,
+    "fps": 29.970029830932617,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 0.8549747048903878,
+    "mean_visibility_core": 0.999976341511606,
+    "view_score": 0.16061257961608386,
+    "torso_len_cv": 0.02833829861214013,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 4,
+      "exercise_s": 19.8,
+      "clip_s": 19.8,
+      "exercise_fraction": 1.0,
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 19.8,
+          "n_reps": 4,
+          "duration_s": 19.8
+        }
+      ]
+    },
+    "mask_rate": 0.8549747048903878,
+    "floor": {
+      "a": 0.0,
+      "b": 146.0,
+      "inlier_ratio": 1.0,
+      "method": "percentile",
+      "n_points": 868
+    },
+    "n_reps": 4,
+    "alternation_intact": true
+  },
+  {
+    "clip_id": "videoplayback__14",
+    "n_frames": 2104,
+    "fps": 23.976024627685547,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 0.9077946768060836,
+    "mean_visibility_core": 0.9740045641900006,
+    "view_score": 0.3409993034441883,
+    "torso_len_cv": 0.5725458531603665,
+    "view": "other",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 21,
+      "exercise_s": 76.2,
+      "clip_s": 87.8,
+      "exercise_fraction": 0.869,
+      "segments": [
+        {
+          "start_s": 10.6,
+          "end_s": 86.9,
+          "n_reps": 21,
+          "duration_s": 76.2
+        }
+      ]
+    },
+    "mask_rate": 0.9077946768060836,
+    "floor": {
+      "a": 0.0,
+      "b": 165.0,
+      "inlier_ratio": 0.2995049504950495,
+      "method": "percentile",
+      "n_points": 1212
+    },
+    "reason": "floor inlier ratio 0.30 below 0.8",
+    "n_reps": 0
+  },
+  {
+    "clip_id": "videoplayback__15",
+    "n_frames": 1005,
+    "fps": 29.970029830932617,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 1.0,
+    "mean_visibility_core": 0.9995020375174669,
+    "view_score": 0.18599248171326782,
+    "torso_len_cv": 0.09498572264310498,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 9,
+      "exercise_s": 32.1,
+      "clip_s": 33.5,
+      "exercise_fraction": 0.958,
+      "segments": [
+        {
+          "start_s": 1.4,
+          "end_s": 33.5,
+          "n_reps": 9,
+          "duration_s": 32.1
+        }
+      ]
+    },
+    "mask_rate": 1.0,
+    "floor": {
+      "a": 0.0,
+      "b": 148.0,
+      "inlier_ratio": 1.0,
+      "method": "percentile",
+      "n_points": 1061
+    },
+    "n_reps": 9,
+    "alternation_intact": true
+  },
+  {
+    "clip_id": "videoplayback__16",
+    "n_frames": 3270,
+    "fps": 30.0,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 1.0,
+    "mean_visibility_core": 0.9996578533806203,
+    "view_score": 0.14873985472362955,
+    "torso_len_cv": 0.0901781480249479,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 0,
+      "total_reps": 0,
+      "exercise_s": 0,
+      "clip_s": 109.0,
+      "exercise_fraction": 0.0,
+      "segments": []
+    },
+    "reason": "no exercise segment detected",
+    "n_reps": 0
+  },
+  {
+    "clip_id": "videoplayback__17",
+    "n_frames": 1194,
+    "fps": 25.0,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 1.0,
+    "mean_visibility_core": 0.9999412772194225,
+    "view_score": 0.19037965164231707,
+    "torso_len_cv": 0.156870175593603,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 5,
+      "exercise_s": 38.2,
+      "clip_s": 47.8,
+      "exercise_fraction": 0.8,
+      "segments": [
+        {
+          "start_s": 5.7,
+          "end_s": 43.9,
+          "n_reps": 5,
+          "duration_s": 38.2
+        }
+      ]
+    },
+    "mask_rate": 1.0,
+    "floor": {
+      "a": 0.0,
+      "b": 165.0,
+      "inlier_ratio": 0.38087774294670845,
+      "method": "percentile",
+      "n_points": 638
+    },
+    "reason": "floor inlier ratio 0.38 below 0.8",
+    "n_reps": 0
+  },
+  {
+    "clip_id": "videoplayback__18",
+    "n_frames": 2632,
+    "fps": 30.0,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 0.9544072948328267,
+    "mean_visibility_core": 0.8842286087498795,
+    "view_score": 0.20890000545250326,
+    "torso_len_cv": 0.21705660760020246,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 0,
+      "total_reps": 0,
+      "exercise_s": 0,
+      "clip_s": 87.7,
+      "exercise_fraction": 0.0,
+      "segments": []
+    },
+    "reason": "no exercise segment detected",
+    "n_reps": 0
+  },
+  {
+    "clip_id": "videoplayback__19",
+    "n_frames": 2164,
+    "fps": 30.0,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 0.9916820702402958,
+    "mean_visibility_core": 0.9992993862506172,
+    "view_score": 0.14656206914800923,
+    "torso_len_cv": 0.1919232551459856,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 3,
+      "exercise_s": 24.0,
+      "clip_s": 72.1,
+      "exercise_fraction": 0.333,
+      "segments": [
+        {
+          "start_s": 36.7,
+          "end_s": 60.7,
+          "n_reps": 3,
+          "duration_s": 24.0
+        }
+      ]
+    },
+    "mask_rate": 0.9916820702402958,
+    "floor": {
+      "a": 0.0,
+      "b": 154.0,
+      "inlier_ratio": 1.0,
+      "method": "percentile",
+      "n_points": 946
+    },
+    "n_reps": 2,
+    "alternation_intact": true
+  },
+  {
+    "clip_id": "videoplayback__20",
+    "n_frames": 347,
+    "fps": 23.976024627685547,
+    "frame_size": [
+      640,
+      352
+    ],
+    "detection_rate": 1.0,
+    "mean_visibility_core": 0.9994775826803889,
+    "view_score": 0.1549898050830099,
+    "torso_len_cv": 0.027630244805415934,
+    "view": "oblique45",
+    "activity": {
+      "n_segments": 1,
+      "total_reps": 4,
+      "exercise_s": 14.5,
+      "clip_s": 14.5,
+      "exercise_fraction": 1.0,
+      "segments": [
+        {
+          "start_s": 0.0,
+          "end_s": 14.5,
+          "n_reps": 4,
+          "duration_s": 14.5
+        }
+      ]
+    },
+    "mask_rate": 1.0,
+    "floor": {
+      "a": 0.0,
+      "b": 156.0,
+      "inlier_ratio": 1.0,
+      "method": "percentile",
+      "n_points": 1634
+    },
+    "n_reps": 4,
+    "alternation_intact": true
   },
   {
     "clip_id": "videoplayback__3",

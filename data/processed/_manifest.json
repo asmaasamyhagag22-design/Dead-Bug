@@ -2,9 +2,9 @@
   "stage": "dataset.build",
   "config_hash": "f726fe616212",
   "config_path": "G:\\Other computers\\My Computer\\Desktop\\projects\\CV\\dead bug\\deadbug-aqa\\configs\\base.yaml",
-  "git_sha": "98b1439",
-  "timestamp": "2026-07-31T13:25:20",
-  "n_clips": 10,
-  "n_reps": 39,
+  "git_sha": "0fa0874",
+  "timestamp": "2026-07-31T15:26:22",
+  "n_clips": 22,
+  "n_reps": 75,
   "reps_table": "G:\\Other computers\\My Computer\\Desktop\\projects\\CV\\dead bug\\deadbug-aqa\\data\\processed\\reps.parquet"
 }

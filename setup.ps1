@@ -35,6 +35,26 @@ if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
 }
 Write-Host "  uv $(uv --version)" -ForegroundColor Green
 
+# --- the pose model ---------------------------------------------------
+# 30 MB, deliberately not in git. Fetched here so that `git clone` + this
+# script is everything a new machine needs -- nobody should have to be sent a
+# file by hand just to run the app.
+$model = Join-Path $repo 'pose_landmarker_heavy.task'
+if (-not (Test-Path $model)) {
+    Write-Host ''
+    Write-Host '  [0/3] downloading the pose model (30 MB)...' -ForegroundColor Yellow
+    $url = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task'
+    try {
+        Invoke-WebRequest -Uri $url -OutFile $model -UseBasicParsing
+        Write-Host "  got $([math]::Round((Get-Item $model).Length / 1MB)) MB" -ForegroundColor Green
+    } catch {
+        Write-Host '  DOWNLOAD FAILED. Copy pose_landmarker_heavy.task in by hand,' -ForegroundColor Red
+        Write-Host "  or fetch it from:`n    $url" -ForegroundColor Red
+    }
+} else {
+    Write-Host "  pose model already present" -ForegroundColor Green
+}
+
 # --- main environment: app, signals, tests ----------------------------
 Write-Host ''
 Write-Host '  [1/3] main environment (mediapipe, opencv, fastapi)...' -ForegroundColor Yellow

@@ -90,10 +90,17 @@ def main() -> int:
     ap.add_argument("--force", action="store_true", help="re-extract instead of using the cache")
     ap.add_argument("--write-manifest", action="store_true",
                     help="also draft data/clips.csv (will not validate until reviewed)")
+    ap.add_argument("--clips-dir", default=None,
+                    help="measure a different folder, e.g. a staging area of "
+                         "candidate clips that are not in the dataset yet")
+    ap.add_argument("--out", default="triage",
+                    help="basename under reports/ for the csv and json")
     args = ap.parse_args()
 
     cfg = load_config(args.config)
-    clips_dir = resolve_path(cfg, "paths.clips")
+    clips_dir = Path(args.clips_dir) if args.clips_dir else resolve_path(cfg, "paths.clips")
+    if not clips_dir.is_absolute():
+        clips_dir = REPO_ROOT / clips_dir
     videos = sorted(clips_dir.glob("*.mp4"))
     if not videos:
         print(f"no .mp4 under {clips_dir}", file=sys.stderr)
@@ -118,7 +125,7 @@ def main() -> int:
             f" reps={row['n_reps']} exercise={row['exercise_fraction']:.0%}"
         )
 
-    out = resolve_path(cfg, "paths.reports") / "triage.csv"
+    out = resolve_path(cfg, "paths.reports") / f"{args.out}.csv"
     fields = sorted({k for row in rows for k in row})
     with open(out, "w", encoding="utf-8", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
@@ -126,7 +133,7 @@ def main() -> int:
         writer.writerows(rows)
     print(f"\nwrote {out}")
 
-    (resolve_path(cfg, "paths.reports") / "triage.json").write_text(
+    (resolve_path(cfg, "paths.reports") / f"{args.out}.json").write_text(
         json.dumps(rows, indent=2), encoding="utf-8"
     )
 
