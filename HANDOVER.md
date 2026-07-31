@@ -43,6 +43,20 @@ git clone https://github.com/asmaasamyhagag22-design/Dead-Bug.git
 cd Dead-Bug
 ```
 
+> 🔴 **لو الريبو جوه مجلد متزامن مع السحابة** (زي `G:\Other computers\...` بتاع Google Drive)
+> — **ابني البيئة برّة المجلد ده**. تثبيت عشرات الآلاف من الملفات الصغيرة على نظام ملفات
+> افتراضي بيفشل بـ `os error 1450: Insufficient system resources`، والـ venv بيطلع نصّه
+> مثبّت: `import numpy` بينجح بس `numpy.array` مش موجودة. اتأكدنا من ده على الجهاز ده.
+>
+> ```bash
+> uv venv "C:/Users/<you>/venvs/deadbug" --python 3.13
+> uv pip install --python "C:/Users/<you>/venvs/deadbug" -r requirements.txt
+> "C:/Users/<you>/venvs/deadbug/Scripts/python.exe" -m pytest tests/ -q
+> ```
+>
+> الكود يقعد على السحابة عادي — الـ venv بس اللي لازم يبقى على قرص محلي.
+> الـ `Makefile` بياخد `PY=...` عشان كده.
+
 ### البيئة الأساسية (التطبيق + الإشارات)
 
 ```bash
@@ -136,17 +150,20 @@ package فاضي على PyPI. والتثبيت **بينجح بـ exit code 0** �
 
 | موديل | متوسط الرُتبة | فاز | متوسط macro-F1 | datasets |
 |---|---|---|---|---|
-| **MiniRocket** | **1.63** | **25/39** | 0.684 | 39 |
-| RF (summary) | 2.14 | 12 | 0.610 | 39 |
-| RF (flatten) | 2.73 | 6 | 0.528 | 39 |
-| majority | 3.58 | 4 | 0.379 | 39 |
-| LITEMV | — | 0 | 0.592 ± 0.285 | **1 بس** |
+| **MiniRocket** | **1.65** | **25/39** | 0.684 | 39 |
+| RF (summary) | 2.17 | 11 | 0.610 | 39 |
+| LITEMV | 2.67 | 1 | 0.582 | **٣ بس** |
+| RF (flatten) | 2.76 | 6 | 0.528 | 39 |
+| majority | 3.60 | 4 | 0.379 | 39 |
+
+> الأرقام دي من `reports/masar_a_results.md` (رن ٢٨ يوليو ٧:٢٧م). النسخة الأقدم من الجدول
+> كانت بتقول 1.63 و LITEMV على dataset واحد — **اتجاوزت**. الملف هو المصدر.
 
 LITEMV أخد **٧٣٦٥ ثانية (ساعتين)** لـ dataset واحد بـ 5 classifiers، وبعدين مات (ذاكرة).
 MiniRocket بياخد **ثوانٍ** ويكسبه.
 
-**الصياغة الصادقة:** *"MiniRocket جه الأول في ٢٥ من ٣٩. LITEMV اتقيّم على عيّنة بسبب
-التكلفة — ساعتين مقابل ثوانٍ — وماتفوّقش عليه فيها."*
+**الصياغة الصادقة:** *"MiniRocket جه الأول في ٢٥ من ٣٩. LITEMV اتقيّم على ٣ datasets بسبب
+التكلفة — ساعتين مقابل ثوانٍ — وماتفوّقش عليه فيهم."*
 
 ⚠️ متقوليش *"استنسخت نتايج الورقة"* — الورقة نفسها ماقدرناش نجيب إعداداتها. قولي
 *"شغّلت على الإعدادات الافتراضية للمكتبة"*.
@@ -216,12 +233,14 @@ detection **٩٠–١٠٠٪**، visibility للمفاصل الأساسية **≈
 
 | الحالة | الحاجة |
 |---|---|
-| ⬜ | بوابة ١ — رسمة `lumbar_gap` صح مقابل مقوّس |
-| ⬜ | حساسية C7 على الـ ٤٠ عدة الغلط |
-| ⬜ | معايرة `view_score` من فيديوهات ٠/٣٠/٤٥ |
-| ⬜ | `data/clips.csv` — تتكتب بإيد من `reports/dedup.csv` |
-| ⬜ | `dataset/{build,schema,normative}.py` · `qc/report.py` · `modeling/features.py` · `cli.py` |
-| ⬜ | السلايدز · `LIMITATIONS.md` · `MODEL_CARD.md` · `DATASHEET.md` |
+| ⬜ | بوابة ١ — رسمة `lumbar_gap` صح مقابل مقوّس · **محتاج تصوير** |
+| ⬜ | حساسية C7 على الـ ٤٠ عدة الغلط · **محتاج تصوير** |
+| ⬜ | معايرة `view_score` من فيديوهات ٠/٣٠/٤٥ · **محتاج تصوير** |
+| ⬜ | السلايدز |
+| ⬜ | تراجعي `person_id` في `data/clips.csv` (مبدئي دلوقتي، id لكل dedup group) |
+| ✅ | `dataset/{build,schema,normative}.py` · `qc/report.py` · `modeling/features.py` · `cli.py` |
+| ✅ | `ingest/{download,clipper}.py` · `scripts/run_triage.py` · `Makefile` · `tests/test_schema.py` |
+| ✅ | `LIMITATIONS.md` · `MODEL_CARD.md` · `DATASHEET.md` |
 
 ---
 

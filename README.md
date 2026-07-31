@@ -44,11 +44,31 @@ environments can import it: same macro-F1, same LOSO splitter, same leakage asse
 
 | | |
 |---|---|
-| **Gate 0** — translation / scale / rotation / flip invariance | ✅ green, 70 tests |
+| **Gate 0** — translation / scale / rotation / flip invariance | ✅ green |
 | **V1 + V3** instrument validity, as unit tests with closed-form expected values | ✅ passing |
 | Pose extraction, floor estimation, lumbar signal on real clips | ✅ working |
+| Live coaching app — causal counting, per-session calibration, voice, report | ✅ working |
+| Dataset / QC / normative-band / feature layers | ✅ built, 138 tests green |
+| Track A — 39 Rehab-Pile datasets | ✅ done: MiniRocket 1st on 25/39, mean rank 1.65 |
 | **Gate 1** — signal separates correct from arched reps | ⏳ blocked: no faulty footage exists yet |
-| Track A ladder (majority / RF-flatten / RF-summary / LITEMV) | 🔄 running |
+
+The one remaining blocker is footage. Four faulted sessions (arched / fast /
+rotated / correct) plus three short clips at known 0° / 30° / 45° would unblock
+Gate 1, the C7 sensitivity check, and the `view_score` calibration all at once.
+See [LIMITATIONS.md](LIMITATIONS.md) §1.
+
+## Commands
+
+```bash
+deadbug scan  <video>     # does this file contain any exercise at all?
+deadbug try   <url|path>  # fetch, scan, then coach -- the demo path
+deadbug build             # the reps table
+deadbug qc                # reports/qc.csv + qc.html
+deadbug band              # the leave-one-subject-out normative band
+```
+
+Run them as `./venv/Scripts/python.exe -m deadbug.cli <command>`, or see the
+`Makefile`.
 
 ## Quickstart
 
