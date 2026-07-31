@@ -8,8 +8,9 @@
       352
     ],
     "detection_rate": 1.0,
+    "mean_visibility_core": 0.9994775826803889,
     "view_score": 0.1549898050830099,
-    "torso_len_cv": 0.03136038616263789,
+    "torso_len_cv": 0.027630244805415934,
     "view": "oblique45",
     "activity": {
       "n_segments": 1,
@@ -34,7 +35,8 @@
       "method": "percentile",
       "n_points": 1634
     },
-    "n_reps": 4
+    "n_reps": 4,
+    "alternation_intact": true
   },
   {
     "clip_id": "recording_2026_07_25_171125",
@@ -45,8 +47,9 @@
       544
     ],
     "detection_rate": 1.0,
+    "mean_visibility_core": 0.9998682654022577,
     "view_score": 0.13834856027840192,
-    "torso_len_cv": 0.060455356446571844,
+    "torso_len_cv": 0.06059133964807807,
     "view": "oblique45",
     "activity": {
       "n_segments": 1,
@@ -71,7 +74,8 @@
       "method": "percentile",
       "n_points": 2003
     },
-    "n_reps": 4
+    "n_reps": 4,
+    "alternation_intact": false
   },
   {
     "clip_id": "recording_2026_07_25_171515",
@@ -82,8 +86,9 @@
       384
     ],
     "detection_rate": 1.0,
+    "mean_visibility_core": 0.9989748901424517,
     "view_score": 0.2791673724106422,
-    "torso_len_cv": 0.025011055711874997,
+    "torso_len_cv": 0.02859079257183798,
     "view": "other",
     "activity": {
       "n_segments": 0,
@@ -93,7 +98,8 @@
       "exercise_fraction": 0.0,
       "segments": []
     },
-    "reason": "no exercise segment detected"
+    "reason": "no exercise segment detected",
+    "n_reps": 0
   },
   {
     "clip_id": "video_project_2__2",
@@ -104,8 +110,9 @@
       720
     ],
     "detection_rate": 0.5554450522128295,
+    "mean_visibility_core": 0.9992522004734968,
     "view_score": 0.17189507877485996,
-    "torso_len_cv": 0.06328424881338274,
+    "torso_len_cv": 0.06290122126498542,
     "view": "oblique45",
     "activity": {
       "n_segments": 1,
@@ -130,7 +137,8 @@
       "method": "percentile",
       "n_points": 2118
     },
-    "reason": "floor inlier ratio 0.18 below 0.8"
+    "reason": "floor inlier ratio 0.18 below 0.8",
+    "n_reps": 0
   },
   {
     "clip_id": "video_project_2",
@@ -141,8 +149,9 @@
       720
     ],
     "detection_rate": 0.7710843373493976,
+    "mean_visibility_core": 0.9999708646856662,
     "view_score": 0.39655898900340314,
-    "torso_len_cv": 0.04182847525765969,
+    "torso_len_cv": 0.04456460490727074,
     "view": "other",
     "activity": {
       "n_segments": 1,
@@ -167,7 +176,8 @@
       "method": "percentile",
       "n_points": 1778
     },
-    "reason": "floor inlier ratio 0.43 below 0.8"
+    "reason": "floor inlier ratio 0.43 below 0.8",
+    "n_reps": 0
   },
   {
     "clip_id": "video_project_2mk",
@@ -178,8 +188,9 @@
       720
     ],
     "detection_rate": 0.17790328273914577,
+    "mean_visibility_core": 0.9999398875626779,
     "view_score": 0.13713842337937143,
-    "torso_len_cv": 0.04744222384613584,
+    "torso_len_cv": 0.04475945552745875,
     "view": "oblique45",
     "activity": {
       "n_segments": 1,
@@ -204,7 +215,8 @@
       "method": "percentile",
       "n_points": 2722
     },
-    "reason": "floor inlier ratio 0.42 below 0.8"
+    "reason": "floor inlier ratio 0.42 below 0.8",
+    "n_reps": 0
   },
   {
     "clip_id": "videoplayback__1",
@@ -215,8 +227,9 @@
       352
     ],
     "detection_rate": 0.9971988795518207,
+    "mean_visibility_core": 0.9973319309522931,
     "view_score": 0.12811802267882638,
-    "torso_len_cv": 0.2858052129844773,
+    "torso_len_cv": 0.28474073122794513,
     "view": "oblique45",
     "activity": {
       "n_segments": 1,
@@ -241,7 +254,8 @@
       "method": "percentile",
       "n_points": 2108
     },
-    "n_reps": 5
+    "n_reps": 5,
+    "alternation_intact": false
   },
   {
     "clip_id": "videoplayback__3",
@@ -252,8 +266,9 @@
       352
     ],
     "detection_rate": 0.9301533219761499,
+    "mean_visibility_core": 0.9993813887129337,
     "view_score": 0.1169171018389577,
-    "torso_len_cv": 0.024159513844188442,
+    "torso_len_cv": 0.02386726863040097,
     "view": "side",
     "activity": {
       "n_segments": 1,
@@ -278,7 +293,8 @@
       "method": "percentile",
       "n_points": 2575
     },
-    "n_reps": 9
+    "n_reps": 9,
+    "alternation_intact": false
   },
   {
     "clip_id": "videoplayback__4",
@@ -289,8 +305,9 @@
       352
     ],
     "detection_rate": 1.0,
+    "mean_visibility_core": 0.9994775826803889,
     "view_score": 0.1549898050830099,
-    "torso_len_cv": 0.03136038616263789,
+    "torso_len_cv": 0.027630244805415934,
     "view": "oblique45",
     "activity": {
       "n_segments": 1,
@@ -315,7 +332,8 @@
       "method": "percentile",
       "n_points": 1634
     },
-    "n_reps": 4
+    "n_reps": 4,
+    "alternation_intact": true
   },
   {
     "clip_id": "videoplayback__6",
@@ -326,8 +344,9 @@
       352
     ],
     "detection_rate": 0.9524547803617571,
+    "mean_visibility_core": 0.9851815534843515,
     "view_score": 0.23199630300813084,
-    "torso_len_cv": 0.574974547486883,
+    "torso_len_cv": 0.39247713528190364,
     "view": "other",
     "activity": {
       "n_segments": 1,
@@ -352,6 +371,7 @@
       "method": "percentile",
       "n_points": 1496
     },
-    "n_reps": 17
+    "n_reps": 13,
+    "alternation_intact": false
   }
 ]

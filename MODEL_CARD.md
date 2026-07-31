@@ -81,8 +81,9 @@ the app can ask for the calibration that a YouTube video never provides.
 
 **Gate 0 — invariance.** Translation, scale, rotation and horizontal-flip
 invariance of the normalization and skeleton layers, as unit tests with
-closed-form expected values. 113 tests, all passing. If Gate 0 fails, every
-number after it is meaningless, so it runs first and blocks everything.
+closed-form expected values. **34 tests** (`test_normalize.py` +
+`test_skeleton.py`), within a suite of **142**. If Gate 0 fails, every number
+after it is meaningless, so it runs first and blocks everything.
 
 **Instrument validity (V1, V3).** A synthetic arch of known size is injected into
 the silhouette and the measured response is checked against the closed-form
@@ -102,9 +103,15 @@ sensitive to it. See [LIMITATIONS.md](LIMITATIONS.md) §9; counting accuracy
 against a known ground truth has not been established, because no clip held has
 one.
 
-**Pose detection while supine.** 90–100% detection, core-joint visibility ≈0.999.
-This was the largest identified risk in the original design document; it is
-measured and it is not a problem. RTMPose was consequently dropped from the plan.
+**Pose detection while supine.** On 7 of 10 clips, 93–100% detection; core-joint
+visibility is 0.985–1.000 across all ten. This was the largest identified risk in
+the original design document; it is measured and it is not a problem, and
+RTMPose was consequently dropped from the plan.
+
+The other three clips run at 77.1%, 55.5% and 17.8% — but that is not a supine
+failure. Those files contain title cards and other exercises; within their
+detected exercise segments the rate is 96–100%. The unqualified claim
+"90–100% detection" is not supportable and is not made.
 
 ### What has *not* been evaluated
 
@@ -159,7 +166,15 @@ do not survive the projection.
 
 See [DATASHEET.md](DATASHEET.md). In short: public YouTube footage plus the
 author's own recordings, all `correct`, de-duplicated with an auditable audit
-trail, `person_id` assigned by hand.
+trail.
+
+⚠️ `person_id` in `data/clips.csv` is **still the provisional auto-assignment**
+— one identifier per dedup group, every row marked `VERIFY person_id`. That is
+the conservative direction only for footage that is genuinely distinct; if two
+different YouTube sources happen to show the same coach, they are currently
+counted as two subjects and a LOSO split would leak. Nothing depends on it yet
+(no band can be fitted at one eligible subject), but it must be reviewed by hand
+before any subject-level number is reported.
 
 ## Ethical considerations
 
@@ -179,7 +194,7 @@ trail, `person_id` assigned by hand.
 
 ```bash
 uv venv venv --python 3.13 && uv pip install --python venv -r requirements.txt
-./venv/Scripts/python.exe -m pytest tests/ -q          # 113 tests
+./venv/Scripts/python.exe -m pytest tests/ -q          # 142 tests
 ```
 
 Track A needs a separate environment — `aeon` pins `numpy<2.5`, `pandas<2.4`,

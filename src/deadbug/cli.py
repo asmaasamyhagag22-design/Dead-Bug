@@ -129,9 +129,17 @@ def cmd_scan(args) -> int:
     _print(summary)
     if not segments:
         print(
-            "\nNo exercise segment found. For an instructional video that is the "
-            "expected answer, not a bug: measured on videoplayback (3), 98 seconds "
-            "of coaching contains zero reps.",
+            "\nNo exercise segment found. For an instructional video that is a "
+            "legitimate answer rather than a bug -- the pipeline is looking for a "
+            "set, and a coach talking through the movement is not one.",
+            file=sys.stderr,
+        )
+    elif summary["exercise_fraction"] > 0.8 and len(segments) == 1:
+        print(
+            "\nNote: nearly the whole clip reads as one segment. On instructional "
+            "footage that usually means slow demonstration drift rather than a set "
+            "-- check the per-rep tempo before trusting the count. "
+            "See LIMITATIONS.md section 9.",
             file=sys.stderr,
         )
     return 0

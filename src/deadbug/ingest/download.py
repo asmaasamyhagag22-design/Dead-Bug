@@ -20,10 +20,12 @@ raises a message naming the install command rather than an ``ImportError``, so a
 machine that only ever runs the app on local files never needs it.
 
 **The measured expectation, so nobody is surprised:** a YouTube instructional
-video is a source of *coaching*, not a source of reps. ``videoplayback (3)`` is
-98 seconds and contains zero reps -- confirmed independently by the live counter
-and the offline segmenter. :func:`download` therefore returns the path and lets
-the caller run activity detection; it makes no promise that the clip is usable.
+video is a poor source of reps. On ``videoplayback (3)`` (97.9 s) the segmenter
+returns 9 detections over 89.5% of the clip, but with 3.6-6.0 s extension times
+against a coached tempo of 1-2 s and an alternation string of ``LRLLRLRLR`` --
+a coach drifting between demonstrations, not a set. :func:`download` therefore
+returns the path and lets the caller run activity detection; it makes no promise
+that the clip is usable. See LIMITATIONS.md section 9.
 """
 
 from __future__ import annotations

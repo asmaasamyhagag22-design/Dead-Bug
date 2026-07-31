@@ -70,8 +70,19 @@ part of the same filming session as §1. Until then, treat `side` versus
 One thing about this measurement *is* settled: it must be computed in **pixel**
 space. MediaPipe returns normalized coordinates whose x and y have different
 pixel scales, and a supine subject is the worst case — the torso runs along x
-while the hips separate along y. Measured on one clip: 0.240 normalized against
-0.131 in pixels, enough to flip the verdict.
+while the hips separate along y. Re-measured 31 Jul 2026 across three clips, all
+640×352:
+
+| clip | normalized | pixel-corrected | ratio |
+|---|---|---|---|
+| `videoplayback (1)` | 0.225 | 0.128 | 1.76× |
+| `clip` | 0.270 | 0.155 | 1.74× |
+| `videoplayback (3)` | 0.196 | 0.117 | 1.68× |
+
+Every one of those normalized values is above the 0.12 side-view threshold and
+every pixel-corrected one for the first and third is below or near it — the
+correction decides the verdict, not the margin. (An earlier single-clip figure
+of 0.240 / 0.131 is superseded by this table; the ratio is what reproduces.)
 
 ## 4. The lumbar signal depends on a segmentation mask, and therefore on a view
 

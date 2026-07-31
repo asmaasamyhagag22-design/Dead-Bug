@@ -15,9 +15,11 @@ or the prominence rule is re-run in seconds, so those parameters actually get
 examined instead of being left at whatever was tried first.
 
 **Reps are cut inside detected segments, never across the whole file.** An
-instructional clip is mostly talking; ``videoplayback (3)`` is 98 seconds with
-no rep in it at all. Running the segmenter over the full timeline mixes the
-coach walking around into the floor estimate and the personal baseline. So
+instructional clip is mostly talking, and on ``videoplayback (3)`` what the
+segmenter does find is a coach drifting between demonstrations rather than a set
+(see LIMITATIONS.md section 9). Running the segmenter over the full timeline
+mixes the coach walking around into the floor estimate and the personal
+baseline. So
 :mod:`deadbug.segment.activity` finds the exercise first, and a clip that
 contains no set produces no rows -- which is the correct answer, not a failure.
 

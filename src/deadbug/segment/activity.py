@@ -1,9 +1,11 @@
 """Find the parts of a video where the exercise is actually happening.
 
-An instructional clip is mostly not exercise. Measured on ``videoplayback (3)``:
-98 seconds containing no extension fast enough to be a rep at all -- the rest is
-the coach talking, demonstrating statically, and repositioning. Feeding that
-whole span to the pipeline corrupts three things at once:
+An instructional clip is mostly not exercise. Measured on ``videoplayback (3)``
+(97.9 s): the detections that survive the tempo filter have 3.6-6.0 s extension
+times against a coached tempo of 1-2 s, and their alternation string is
+``LRLLRLRLR`` where a Dead Bug alternates strictly -- a coach drifting between
+demonstrations rather than a set. Feeding that whole span to the pipeline
+corrupts three things at once:
 
 - the floor estimate, which assumes the subject is lying down,
 - the personal baseline, which assumes the first reps are reps,
