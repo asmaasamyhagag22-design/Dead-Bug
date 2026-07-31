@@ -191,6 +191,22 @@ def test_decode_round_trips_a_real_jpeg():
     assert out is not None and out.shape == (32, 48, 3)
 
 
+def test_protocol_that_cannot_fit_the_clip_is_refused_up_front():
+    """Settings that consume the whole clip must fail fast, not after inference.
+
+    Real case: a 72 s YouTube video submitted with calibration 70 s and 10
+    baseline reps. The run completed normally, cost minutes of MediaPipe, and
+    reported zero reps -- which reads as the system failing rather than the
+    settings eating the video. The same clip at 3/3 yields 7 counted reps.
+    """
+    from deadbug.webapp.server import check_protocol_fits
+
+    assert "70s" in check_protocol_fits(70, 10, 72.1)
+    assert check_protocol_fits(70, 1, 72.1)          # calibration alone overruns
+    assert check_protocol_fits(3, 3, 72.1) == ""     # the sane default fits
+    assert check_protocol_fits(3, 3, 0) == ""        # unknown duration: no opinion
+
+
 def test_triage_warns_about_an_oblique_camera():
     """The app must say when the back-arch check is not trustworthy."""
     from deadbug.config import load_config

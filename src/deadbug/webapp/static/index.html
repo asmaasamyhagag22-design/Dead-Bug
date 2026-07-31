@@ -133,11 +133,13 @@
       <label for="yt-url">Video URL</label>
       <input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=...">
       <div class="row">
-        <div><label for="yt-setup">Calibration seconds</label>
-             <input type="number" id="yt-setup" value="3" min="0" max="15"></div>
-        <div><label for="yt-base">Baseline reps</label>
-             <input type="number" id="yt-base" value="3" min="1" max="10"></div>
+        <div><label for="yt-setup">Calibration seconds <span class="muted">(3 is right for almost everything)</span></label>
+             <input type="number" id="yt-setup" value="3" min="1" max="15" data-clamp></div>
+        <div><label for="yt-base">Baseline reps <span class="muted">(not scored — they set your normal)</span></label>
+             <input type="number" id="yt-base" value="3" min="1" max="10" data-clamp></div>
       </div>
+      <p class="muted">Only reps <em>after</em> calibration and the baseline are scored, so
+         raising these eats the clip. On a 72&nbsp;s video, calibration 70 leaves nothing.</p>
       <div class="actions"><button id="yt-go">Analyse</button></div>
       <div id="yt-status"></div>
     </div>
@@ -152,11 +154,13 @@
       <label for="up-file">Video file</label>
       <input type="file" id="up-file" accept="video/*">
       <div class="row">
-        <div><label for="up-setup">Calibration seconds</label>
-             <input type="number" id="up-setup" value="3" min="0" max="15"></div>
-        <div><label for="up-base">Baseline reps</label>
-             <input type="number" id="up-base" value="3" min="1" max="10"></div>
+        <div><label for="up-setup">Calibration seconds <span class="muted">(3 is right for almost everything)</span></label>
+             <input type="number" id="up-setup" value="3" min="1" max="15" data-clamp></div>
+        <div><label for="up-base">Baseline reps <span class="muted">(not scored — they set your normal)</span></label>
+             <input type="number" id="up-base" value="3" min="1" max="10" data-clamp></div>
       </div>
+      <p class="muted">Only reps <em>after</em> calibration and the baseline are scored, so
+         raising these eats the clip.</p>
       <div class="actions"><button id="up-go">Analyse</button></div>
       <div id="up-status"></div>
     </div>
@@ -174,6 +178,20 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t === tab)));
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === tab.dataset.panel));
   };
+});
+
+/* Keep the numeric settings inside their declared range. `max` on a number input
+   is advisory unless the form is validated, and a calibration of 70 on a 72 s
+   clip consumes the whole video and reports zero reps -- which reads as a
+   failure of the system rather than of the setting. The server refuses it too;
+   this stops it being typed at all. */
+document.querySelectorAll('input[data-clamp]').forEach(el => {
+  const fix = () => {
+    const lo = +el.min, hi = +el.max, v = +el.value;
+    if (Number.isFinite(v)) el.value = Math.min(hi, Math.max(lo, v));
+  };
+  el.addEventListener('change', fix);
+  el.addEventListener('blur', fix);
 });
 
 /* ---------------- skeleton ---------------- */

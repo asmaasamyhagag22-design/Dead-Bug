@@ -183,10 +183,15 @@ def create_app(config_path: str = "configs/base.yaml") -> FastAPI:
                     raise HTTPException(413, "file larger than 300 MB")
                 out.write(chunk)
 
-        ok, why = _probe_ok(target)
+        ok, why, duration = _probe_ok(target)
         if not ok:
             target.unlink(missing_ok=True)
             raise HTTPException(400, why)
+
+        bad = check_protocol_fits(setup_seconds, baseline_reps, duration)
+        if bad:
+            target.unlink(missing_ok=True)
+            raise HTTPException(400, bad)
 
         pool.submit(_run, job, target, setup_seconds, baseline_reps)
         return JSONResponse(job.as_dict())
@@ -219,6 +224,12 @@ def create_app(config_path: str = "configs/base.yaml") -> FastAPI:
                 f"{MAX_UPLOAD_SECONDS/60:.0f} - extraction cost is linear in "
                 "duration, and instructional videos are mostly not exercise.",
             )
+
+        # Checked BEFORE the download, not after: the alternative is spending a
+        # download and several minutes of inference to report zero reps.
+        bad = check_protocol_fits(setup_seconds, baseline_reps, duration)
+        if bad:
+            raise HTTPException(400, bad)
 
         def fetch_and_run() -> None:
             job.status = "running"
@@ -388,23 +399,58 @@ def _decode(data: str) -> np.ndarray | None:
     return cv2.imdecode(buf, cv2.IMREAD_COLOR)
 
 
-def _probe_ok(path: Path) -> tuple[bool, str]:
+def _probe_ok(path: Path) -> tuple[bool, str, float]:
+    """``(ok, why_not, duration_s)``."""
     cap = cv2.VideoCapture(str(path))
     try:
         if not cap.isOpened():
-            return False, "that file could not be opened as a video"
+            return False, "that file could not be opened as a video", 0.0
         fps = cap.get(cv2.CAP_PROP_FPS) or 0
         frames = cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0
     finally:
         cap.release()
     if frames <= 0:
-        return False, "that file contains no readable frames"
-    if fps > 0 and frames / fps > MAX_UPLOAD_SECONDS:
+        return False, "that file contains no readable frames", 0.0
+    duration = frames / fps if fps > 0 else 0.0
+    if duration > MAX_UPLOAD_SECONDS:
         return False, (
-            f"that clip is {frames / fps / 60:.0f} minutes; the limit is "
+            f"that clip is {duration / 60:.0f} minutes; the limit is "
             f"{MAX_UPLOAD_SECONDS / 60:.0f}"
+        ), duration
+    return True, "", duration
+
+
+#: A baseline rep needs roughly this long. Used only to warn before spending
+#: minutes of inference on a run that cannot produce a single judged rep.
+SECONDS_PER_REP = 3.0
+
+
+def check_protocol_fits(setup_seconds: float, baseline_reps: int, duration_s: float) -> str:
+    """Empty string if the session protocol can fit in the clip, else why not.
+
+    Reps are only *judged* after calibration has finished and the baseline reps
+    have been performed. Set those too high for the clip and the run completes
+    normally, costs several minutes of inference, and reports zero reps -- which
+    reads as "the system failed" when it means "the settings consumed the video".
+    Measured case: a 72 s clip with calibration set to 70 s.
+    """
+    if duration_s <= 0:
+        return ""
+    if setup_seconds >= duration_s:
+        return (
+            f"calibration is set to {setup_seconds:.0f}s but the clip is only "
+            f"{duration_s:.0f}s long, so nothing would be left to score. "
+            f"Calibration only needs a few seconds of lying still - try 3."
         )
-    return True, ""
+    needed = setup_seconds + baseline_reps * SECONDS_PER_REP
+    if needed >= duration_s:
+        return (
+            f"calibration ({setup_seconds:.0f}s) plus {baseline_reps} baseline "
+            f"rep(s) needs about {needed:.0f}s before the first rep can be judged, "
+            f"and the clip is {duration_s:.0f}s. Nothing would be scored. "
+            f"Try calibration 3 and baseline 3."
+        )
+    return ""
 
 
 def _has_ytdlp() -> bool:
