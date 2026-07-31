@@ -1,0 +1,10 @@
+{
+  "stage": "dataset.build",
+  "config_hash": "f726fe616212",
+  "config_path": "G:\\Other computers\\My Computer\\Desktop\\projects\\CV\\dead bug\\deadbug-aqa\\configs\\base.yaml",
+  "git_sha": "dedf4dd",
+  "timestamp": "2026-07-31T08:57:24",
+  "n_clips": 10,
+  "n_reps": 43,
+  "reps_table": "G:\\Other computers\\My Computer\\Desktop\\projects\\CV\\dead bug\\deadbug-aqa\\data\\processed\\reps.parquet"
+}

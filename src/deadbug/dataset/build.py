@@ -216,11 +216,13 @@ def build_clip(clip: ClipRecord, cfg: dict, force: bool = False) -> tuple[list[R
     diagnostics["activity"] = summarise(segments, kpts_raw.shape[0] / fps)
     if not segments:
         diagnostics["reason"] = "no exercise segment detected"
+        diagnostics["n_reps"] = 0
         return [], diagnostics
 
     diagnostics["mask_rate"] = float(mask_valid.mean())
     if not mask_valid.any():
         diagnostics["reason"] = "no segmentation mask on any frame"
+        diagnostics["n_reps"] = 0
         return [], diagnostics
 
     # Fit the floor to real masks only. A padded zero mask has no lower
@@ -230,12 +232,14 @@ def build_clip(clip: ClipRecord, cfg: dict, force: bool = False) -> tuple[list[R
     diagnostics["floor"] = {k: _jsonable(v) for k, v in floor.items()}
     if not np.isfinite(floor["b"]):
         diagnostics["reason"] = "floor estimate failed"
+        diagnostics["n_reps"] = 0
         return [], diagnostics
     if floor["inlier_ratio"] < cfg_get(cfg, "qc.min_floor_inlier_ratio"):
         diagnostics["reason"] = (
             f"floor inlier ratio {floor['inlier_ratio']:.2f} below "
             f"{cfg_get(cfg, 'qc.min_floor_inlier_ratio')}"
         )
+        diagnostics["n_reps"] = 0
         return [], diagnostics
 
     # Signals are computed once over the whole clip and sliced per rep. Slicing

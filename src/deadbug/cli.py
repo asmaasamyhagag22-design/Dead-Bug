@@ -196,11 +196,33 @@ def cmd_band(args) -> int:
         print("no reps table -- run `deadbug build` first", file=sys.stderr)
         return 1
 
-    bands = build_from_reps(read_reps(table), cfg)
+    reps = read_reps(table)
+    bands = build_from_reps(reps, cfg)
     out = save_band(bands, resolve_path(cfg, "paths.band"))
     print(f"wrote {out} -- {len(bands)} leave-one-subject-out band(s)")
     for person, band in sorted(bands.items()):
         print(f"  held out {person}: fitted on {band.n_reps} reps from {band.n_persons} others")
+
+    if not bands:
+        # Say why. An empty band file is the correct output for the data we
+        # have, and it is also exactly what a silent bug would produce.
+        eligible = reps[
+            reps["condition"].isin(cfg_get(cfg, "dataset.band.conditions"))
+            & reps["view"].isin(cfg_get(cfg, "dataset.band.views"))
+        ]
+        n_persons = eligible["person_id"].nunique()
+        print(
+            f"\nNo band could be fitted, and that is the honest result, not an error.\n"
+            f"  eligible reps:     {len(eligible)} of {len(reps)}\n"
+            f"  eligible subjects: {n_persons}\n"
+            f"Leave-one-subject-out needs at least 2 subjects: holding one out has to\n"
+            f"leave someone to fit on. The filter is condition in "
+            f"{cfg_get(cfg, 'dataset.band.conditions')} and view in "
+            f"{cfg_get(cfg, 'dataset.band.views')}, and only side views qualify because\n"
+            f"the lumbar gap does not project onto the silhouette from any other angle.\n"
+            f"See FILMING.md.",
+            file=sys.stderr,
+        )
     return 0
 
 
