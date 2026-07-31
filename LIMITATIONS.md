@@ -34,10 +34,17 @@ a results slide.
 
 ## 2. The subject pool is too small for the numbers to be stable
 
-Track B has a handful of subjects, and the usable subset is smaller still: of
-ten source clips, one pair is byte-identical, three are exports of one session,
-one collapses to 17% detection, and one 98-second instructional video contains
-zero reps. The clips that survive triage are a small number of people.
+Track B has a handful of subjects, and the usable subset is smaller still. Of
+ten source clips (measured 31 Jul 2026, `reports/triage.csv`): one pair is
+byte-identical, three are exports of one session, one collapses to 18%
+detection, two have a torso-length CV above 0.10 because the camera moved, and
+one contains no exercise at all.
+
+**Exactly one clip — `videoplayback (3)` — classifies as a true side view**, and
+the lumbar signal is defined only for side views. A normative band needs at least
+two subjects to be leave-one-subject-out at all. Today there is one usable side
+view, so the band cannot be fitted, and `dataset.normative.fit_band` raises
+rather than returning something that looks like an answer.
 
 Consequences that are not negotiable:
 
@@ -152,13 +159,37 @@ of §1.
 - No audio, no held-out clinical validation set, no comparison against a
   motion-capture ground truth.
 
-## 9. Instructional videos are a source of coaching, not of reps
+## 9. On instructional footage the segmenter's verdict is not stable
 
-Measured, and confirmed two independent ways — the live counter and the offline
-segmenter agreed: `videoplayback (3).mp4` is 98 seconds long and contains **zero**
-reps. It is a coach talking and demonstrating statically.
+⚠️ **An earlier claim in HANDOVER — that `videoplayback (3).mp4` contains zero
+reps across 98 seconds — does not reproduce with the code as it stands.** Re-run
+on 31 Jul 2026, that clip yields 9 detections covering 90% of its duration.
 
-This is why `segment.activity` finds the exercise segments before anything else
-runs, and why a clip that yields no rows is a correct answer rather than a
-failure. It is also the strongest argument for filming: YouTube supplies neither
-faults nor labels.
+The instability traces to one constant. `segment/activity.py` states the
+physiological prior in its docstring as *"a dead bug extension takes roughly one
+to four seconds"* and then sets `MAX_EXTEND_S = 6.0`, which is not that. The
+count depends heavily on which of the two you believe:
+
+| clip | `max_extend_s = 6.0` (code) | `= 4.0` (docstring) | `= 3.0` |
+|---|---|---|---|
+| `videoplayback (3)` | 9 reps, 90% | 3 reps, 30% | 0 reps, 0% |
+| `videoplayback (1)` | 6 reps, 70% | 6 reps, 70% | 6 reps, 70% |
+| `clip` ≡ `videoplayback (4)` | 4 reps, 100% | 4 reps, 100% | 0 reps, 0% |
+| `Recording …171515` | 0 reps | 0 reps | 0 reps |
+
+The two clips with real reps are stable across the range; the instructional clip
+is the one that swings. And the 9 detections at 6.0 s look like what they are —
+extension times of 3.6–6.0 s against a coached tempo of about 1–2 s, and an
+alternation string of `LRLLRLRLR` when a Dead Bug alternates strictly. Those are
+the coach drifting between demonstrations, not reps.
+
+**What may be said:** the segmenter separates the two clips that contain real
+sets from the one that does not, and its verdict on demonstration footage is
+sensitive to a tempo bound the codebase has not settled. **What may not be
+said:** that any clip was proven to contain zero reps, or that two independent
+methods confirmed it. The live counter and the offline segmenter now share the
+same 6.0 s bound, so agreement between them is not independent evidence.
+
+This does not weaken the case for filming — it strengthens it. A tempo threshold
+cannot be calibrated on footage where nobody recorded what the true count was.
+Ten deliberate reps with a known answer settles it in one take.

@@ -70,6 +70,18 @@ These calibrate `triage.view_score_side_max` (currently 0.12) and
 `view_score_oblique_max` (0.21), which today come from a geometric table rather
 than from measurement. Mark the angles on the floor with tape before you start.
 
+### While you are there: settle the tempo bound
+
+Count your reps out loud, or just remember that each take is exactly ten. That
+gives the segmenter its first **known** answer, which nothing currently held
+provides.
+
+It matters more than it sounds. `segment/activity.py` states the prior as "one to
+four seconds" in its docstring and then uses `MAX_EXTEND_S = 6.0`; on
+demonstration footage the two give 3 reps and 9 reps for the same clip. Ten reps
+with a known count settles which is right in one take —
+see [LIMITATIONS.md](LIMITATIONS.md) §9.
+
 ## Optional, if a second person is available
 
 One `correct` take from someone else doubles the subject count. The

@@ -1,0 +1,11 @@
+clip_id,dedup_group,detection_rate,duration_s,exercise_fraction,file,fps,mean_visibility_core,n_frames,n_reps,torso_len_cv,view,view_score
+clip,G06,1.0,14.5,1.0,data/clips/clip.mp4,23.976,0.999,347,4,0.031,oblique45,0.155
+recording_2026_07_25_171125,G01,1.0,33.5,0.81,data/clips/Recording 2026-07-25 171125.mp4,30.0,1.0,1005,4,0.06,oblique45,0.138
+recording_2026_07_25_171515,G02,1.0,8.7,0.0,data/clips/Recording 2026-07-25 171515.mp4,30.0,0.999,262,0,0.025,other,0.279
+video_project_2__2,G03,0.555,67.0,0.391,data/clips/Video Project 2 (2).mp4,30.0,0.999,2011,4,0.063,oblique45,0.172
+video_project_2,G04,0.771,24.9,0.73,data/clips/Video Project 2.mp4,30.0,1.0,747,3,0.042,other,0.397
+video_project_2mk,G05,0.178,94.4,0.185,data/clips/Video Project 2mk.mp4,30.0,1.0,2833,6,0.047,oblique45,0.137
+videoplayback__1,G07,0.997,29.8,0.699,data/clips/videoplayback (1).mp4,23.976,0.997,714,6,0.286,oblique45,0.128
+videoplayback__3,G08,0.93,97.9,0.895,data/clips/videoplayback (3).mp4,29.97,0.999,2935,9,0.024,side,0.117
+videoplayback__4,G06,1.0,14.5,1.0,data/clips/videoplayback (4).mp4,23.976,0.999,347,4,0.031,oblique45,0.155
+videoplayback__6,G09,0.952,77.4,0.785,data/clips/videoplayback (6).mp4,25.0,0.985,1935,19,0.575,other,0.232

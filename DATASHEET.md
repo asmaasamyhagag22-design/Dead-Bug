@@ -82,17 +82,31 @@ and nothing else. The schema rejects any other source.
 torso-length CV, core-joint visibility, and the exercise fraction, for every
 clip. Highlights that shaped the project:
 
-| clip | detection | view score | torso CV | verdict |
-|---|---|---|---|---|
-| `videoplayback (3)` | 92.7% | 0.119 | 0.020 | clean side view — and **0 reps in 98 s** |
-| `videoplayback (6)` | 90.1% | 0.112 | 0.495 | camera zooms |
-| `videoplayback (1)` | 97.8% | 0.123 | 0.274 | oblique, subject moves |
-| `Video Project 2mk` | 17.3% | 0.103 | 0.020 | **detection collapses** |
-| `clip` ≡ `videoplayback (4)` | 100% | 0.154 | 0.029 | duplicate |
+Measured 31 Jul 2026 over all ten clips (`scripts/run_triage.py`):
 
-That `videoplayback (3)` is simultaneously the cleanest camera work and
-completely useless is the most informative row in the table: **instructional
-videos are a source of coaching, not a source of reps.**
+| clip | detection | view score | view | torso CV | reps | verdict |
+|---|---|---|---|---|---|---|
+| `videoplayback (3)` | 93.0% | 0.117 | side | 0.024 | 9 | the **only** clean side view; reps are demonstration drift, see below |
+| `videoplayback (1)` | 99.7% | 0.128 | oblique45 | **0.286** | 6 | real reps, but the subject drifts in frame |
+| `clip` ≡ `videoplayback (4)` | 100% | 0.155 | oblique45 | 0.031 | 4 | duplicate pair, one subject |
+| `videoplayback (6)` | 95.2% | 0.232 | other | **0.575** | 19 | camera zooms throughout |
+| `Recording …171125` | 100% | 0.138 | oblique45 | 0.060 | 4 | |
+| `Recording …171515` | 100% | 0.279 | other | 0.025 | **0** | genuinely contains no exercise |
+| `Video Project 2` | 77.1% | 0.397 | other | 0.042 | 3 | |
+| `Video Project 2 (2)` | 55.5% | 0.172 | oblique45 | 0.063 | 4 | detection unreliable |
+| `Video Project 2mk` | **17.8%** | 0.137 | oblique45 | 0.047 | 6 | **detection collapses** |
+
+The table is unflattering and that is the point. **Exactly one clip is a clean
+side view**, and the lumbar signal is only defined for side views. Two clips have
+a torso-length CV above 0.10, meaning the camera moved. One has detection at 18%.
+And every row is `condition = correct`.
+
+⚠️ An earlier figure recorded for `videoplayback (3)` — zero reps across 98
+seconds — **does not reproduce**; see [LIMITATIONS.md](LIMITATIONS.md) §9. The
+nine detections have 3.6–6.0 s extension times and broken alternation, so they
+are a coach moving between demonstrations rather than reps, but "does not look
+like reps" is a weaker statement than "contains none", and only the weaker one is
+supported.
 
 ### What is *not* in it
 

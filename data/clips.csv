@@ -1,0 +1,11 @@
+clip_id,file,person_id,condition,view,label_source,dedup_group,session,camera_angle_deg,detection_rate,view_score,torso_len_cv,qc_status,notes
+clip,data/clips/clip.mp4,src_G06,correct,oblique45,intent,G06,,nan,1.0,0.155,0.031,ok,"VERIFY person_id -- provisional, one id per dedup group"
+recording_2026_07_25_171125,data/clips/Recording 2026-07-25 171125.mp4,src_G01,correct,oblique45,intent,G01,,nan,1.0,0.138,0.06,ok,"VERIFY person_id -- provisional, one id per dedup group"
+recording_2026_07_25_171515,data/clips/Recording 2026-07-25 171515.mp4,src_G02,correct,other,intent,G02,,nan,1.0,0.279,0.025,ok,"VERIFY person_id -- provisional, one id per dedup group"
+video_project_2__2,data/clips/Video Project 2 (2).mp4,src_G03,correct,oblique45,intent,G03,,nan,0.555,0.172,0.063,ok,"VERIFY person_id -- provisional, one id per dedup group"
+video_project_2,data/clips/Video Project 2.mp4,src_G04,correct,other,intent,G04,,nan,0.771,0.397,0.042,ok,"VERIFY person_id -- provisional, one id per dedup group"
+video_project_2mk,data/clips/Video Project 2mk.mp4,src_G05,correct,oblique45,intent,G05,,nan,0.178,0.137,0.047,ok,"VERIFY person_id -- provisional, one id per dedup group"
+videoplayback__1,data/clips/videoplayback (1).mp4,src_G07,correct,oblique45,intent,G07,,nan,0.997,0.128,0.286,ok,"VERIFY person_id -- provisional, one id per dedup group"
+videoplayback__3,data/clips/videoplayback (3).mp4,src_G08,correct,side,intent,G08,,nan,0.93,0.117,0.024,ok,"VERIFY person_id -- provisional, one id per dedup group"
+videoplayback__4,data/clips/videoplayback (4).mp4,src_G06,correct,oblique45,intent,G06,,nan,1.0,0.155,0.031,ok,"VERIFY person_id -- provisional, one id per dedup group"
+videoplayback__6,data/clips/videoplayback (6).mp4,src_G09,correct,other,intent,G09,,nan,0.952,0.232,0.575,ok,"VERIFY person_id -- provisional, one id per dedup group"

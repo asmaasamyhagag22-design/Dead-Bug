@@ -94,9 +94,13 @@ the long route — mirror the raw pixels, re-normalize, re-stack. A wrong flip d
 not crash; it teaches contradictory left/right labels while the loss descends
 normally, which is why it is tested rather than reviewed.
 
-**Rep counting.** Cross-checked two independent ways: the causal live counter and
-the offline `find_peaks` segmenter. They agree on which clips contain reps,
-including agreeing that `videoplayback (3).mp4` contains none across 98 seconds.
+**Rep counting.** Two implementations exist — the causal live counter and the
+offline `find_peaks` segmenter — and they agree on which clips contain real sets.
+They are **not** independent evidence, though: both read the same
+`max_extend_s = 6.0` tempo bound, and on demonstration footage the count is
+sensitive to it. See [LIMITATIONS.md](LIMITATIONS.md) §9; counting accuracy
+against a known ground truth has not been established, because no clip held has
+one.
 
 **Pose detection while supine.** 90–100% detection, core-joint visibility ≈0.999.
 This was the largest identified risk in the original design document; it is
