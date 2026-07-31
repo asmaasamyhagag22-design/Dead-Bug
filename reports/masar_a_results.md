@@ -4,11 +4,11 @@
 
 | model | mean rank | wins | mean macro_f1_mean | median | datasets |
 |---|---|---|---|---|---|
-| minirocket | **1.63** | 25 | 0.684 | 0.670 | 39 |
-| litemv | **2.00** | 0 | 0.592 | 0.592 | 1 |
-| rf_summary | **2.14** | 12 | 0.610 | 0.583 | 39 |
-| rf_flatten | **2.73** | 6 | 0.528 | 0.535 | 39 |
-| majority | **3.58** | 4 | 0.379 | 0.333 | 39 |
+| minirocket | **1.65** | 25 | 0.684 | 0.670 | 39 |
+| rf_summary | **2.17** | 11 | 0.610 | 0.583 | 39 |
+| litemv | **2.67** | 1 | 0.582 | 0.592 | 3 |
+| rf_flatten | **2.76** | 6 | 0.528 | 0.535 | 39 |
+| majority | **3.60** | 4 | 0.379 | 0.333 | 39 |
 
 Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold score can swing on sampling alone, and averaging raw scores would let a dataset where everything scores 0.9 outweigh one where everything scores 0.4. Ranking is the standard presentation in the time-series-classification literature for exactly this reason. `wins` counts datasets where a model tied or took the top score.
 
@@ -20,7 +20,7 @@ Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold scor
 |---|---|---|---|---|---|---|
 | IRDS | 9 | -- | 0.406 | 0.652 | 0.461 | 0.497 |
 | KERAAL | 6 | -- | 0.431 | 0.554 | 0.446 | 0.566 |
-| KIMORE | 5 | 0.592 | 0.392 | 0.614 | 0.505 | 0.530 |
+| KIMORE | 5 | 0.582 | 0.392 | 0.614 | 0.505 | 0.530 |
 | KINECAL | 4 | -- | 0.480 | 0.500 | 0.480 | 0.480 |
 | SPHERE | 1 | -- | 0.311 | 0.846 | 0.555 | 0.715 |
 | UCDHE | 4 | -- | 0.259 | 0.744 | 0.602 | 0.586 |
@@ -36,6 +36,7 @@ Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold scor
 | rf_flatten | 0.607 ± 0.323 | 0.607 ± 0.323 | 0.700 ± 0.245 | 0.719 ± 0.242 | 0.300 1.000 0.400 0.333 1.000 |
 | rf_summary | 0.607 ± 0.323 | 0.607 ± 0.323 | 0.700 ± 0.245 | 0.719 ± 0.242 | 0.300 1.000 0.400 0.333 1.000 |
 | minirocket | 0.610 ± 0.222 | 0.701 ± 0.232 | 0.717 ± 0.194 | 0.743 ± 0.167 | 0.708 0.455 0.400 0.486 1.000 |
+| litemv | 0.473 ± 0.265 | 0.540 ± 0.264 | 0.600 ± 0.200 | 0.619 ± 0.206 | 0.300 0.333 0.400 0.333 1.000 |
 
 ## KIMORE_clf_bn_LT
 
@@ -45,6 +46,11 @@ Mean rank, not mean score. Test folds here hold 6-14 samples, so a per-fold scor
 | rf_flatten | 0.352 ± 0.225 | 0.352 ± 0.225 | 0.467 ± 0.194 | 0.391 ± 0.230 | 0.222 0.625 0.143 0.143 0.625 |
 | rf_summary | 0.457 ± 0.158 | 0.457 ± 0.158 | 0.573 ± 0.139 | 0.519 ± 0.132 | 0.300 0.625 0.250 0.486 0.625 |
 | minirocket | 0.420 ± 0.227 | 0.420 ± 0.227 | 0.435 ± 0.214 | 0.476 ± 0.205 | 0.708 0.667 0.143 0.333 0.250 |
+| litemv | 0.682 ± 0.207 | 0.682 ± 0.207 | 0.760 ± 0.131 | 0.719 ± 0.159 | 0.300 0.829 0.829 0.625 0.829 |
+
+Pooled per-class F1 for `litemv`: 0=0.667, 1=0.743
+
+The reported number is the **mean over folds with its standard deviation**. The pooled confusion matrix below is for display only; the macro-F1 computed from it is a different quantity. A large std measures how much the score depends on which subjects were held out.
 
 ## KIMORE_clf_bn_PR
 
