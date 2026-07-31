@@ -203,8 +203,8 @@ def score_rep(band: Band, excursion: float, signal: float) -> dict:
     """
     b = band.bin_of(excursion)
     if b < 0 or not np.isfinite(signal):
-        return {"bin": b, "z": float("nan"), "exceeds": False,
-                "support": 0, "reason": "no bin"}
+        return {"bin": b, "z": float("nan"), "limit": float("nan"), "exceeds": False,
+                "support": 0, "extrapolated": False, "reason": "no bin"}
 
     mean = band.mean[b]
     std = band.std[b]
