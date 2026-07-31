@@ -142,6 +142,20 @@ def extract_or_load(
             "the mask, so an extraction without one is unusable -- re-extract "
             "with pose.output_segmentation_masks: true."
         )
+
+    # Hard guard, not a warning. A cache written before masks were padded has
+    # one entry per *detected* frame rather than per frame, so mask t belongs to
+    # some earlier moment than keypoints t. Every lumbar reading derived from it
+    # is wrong and none of them look wrong.
+    n_kpts, n_masks = out["kpts_raw"].shape[0], out["mask"].shape[0]
+    if n_masks != n_kpts:
+        raise RuntimeError(
+            f"{npz_path} is a stale cache: {n_kpts} keypoint frames against "
+            f"{n_masks} masks. Masks used to be appended only when present, which "
+            "misaligns them with the keypoints. Re-extract with --force."
+        )
+    if "mask_valid" not in out:
+        out["mask_valid"] = np.ones(n_kpts, dtype=bool)
     return out
 
 
@@ -179,6 +193,7 @@ def build_clip(clip: ClipRecord, cfg: dict, force: bool = False) -> tuple[list[R
 
     kpts_raw = data["kpts_raw"].astype(np.float64)
     masks = data["mask"]
+    mask_valid = np.asarray(data["mask_valid"], dtype=bool)
     fps = float(data["fps"])
     frame_size = tuple(int(v) for v in data["frame_size"])
 
@@ -203,7 +218,15 @@ def build_clip(clip: ClipRecord, cfg: dict, force: bool = False) -> tuple[list[R
         diagnostics["reason"] = "no exercise segment detected"
         return [], diagnostics
 
-    floor = FL.estimate_floor_from_config(masks, kpts_raw, cfg)
+    diagnostics["mask_rate"] = float(mask_valid.mean())
+    if not mask_valid.any():
+        diagnostics["reason"] = "no segmentation mask on any frame"
+        return [], diagnostics
+
+    # Fit the floor to real masks only. A padded zero mask has no lower
+    # boundary, so including them would just be noise -- but they must stay in
+    # the array so the indices keep matching the keypoints.
+    floor = FL.estimate_floor_from_config(masks[mask_valid], kpts_raw[mask_valid], cfg)
     diagnostics["floor"] = {k: _jsonable(v) for k, v in floor.items()}
     if not np.isfinite(floor["b"]):
         diagnostics["reason"] = "floor estimate failed"
@@ -230,6 +253,12 @@ def build_clip(clip: ClipRecord, cfg: dict, force: bool = False) -> tuple[list[R
         end_frac=cfg_get(cfg, "signals.ribcage.window_end_frac"),
     )["rib_gap"]
     rotation = ROT.rot_deviation_from_config(kpts_raw, cfg, frame_size=frame_size)["rot_dev"]
+
+    # A padded frame has an empty silhouette, which the band code reads as a gap
+    # of zero -- indistinguishable from a back pressed flat to the floor. NaN is
+    # the honest value, and the per-rep summaries skip it.
+    lumbar = np.where(mask_valid, lumbar, np.nan)
+    rib = np.where(mask_valid, rib, np.nan)
 
     kpts_norm, _ = normalize(kpts_raw, stat=cfg_get(cfg, "geometry.normalize.torso_len_ref"))
 

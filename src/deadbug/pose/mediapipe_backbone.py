@@ -143,8 +143,17 @@ def extract_clip(
     A fresh backbone is constructed here, per clip, deliberately -- see the
     module docstring.
 
-    Writes ``kpts_raw (T, 33, 4)``, ``mask (T, H', W')``, ``fps``,
-    ``frame_size``, ``latency_ms (T,)`` and returns a summary dict for QC.
+    Writes ``kpts_raw (T, 33, 4)``, ``mask (T, H', W')``, ``mask_valid (T,)``,
+    ``fps``, ``frame_size``, ``latency_ms (T,)`` and returns a summary dict for QC.
+
+    **``mask`` is always the same length as ``kpts_raw``.** Frames where the
+    detector returned no mask get a zero mask and ``mask_valid[t] = False``.
+    Appending only the masks that exist -- the obvious implementation -- silently
+    desynchronises the two arrays the moment detection drops a single frame, so
+    mask ``t`` is paired with keypoints from some earlier time. Measured on this
+    dataset: 6 of 10 clips, one of them 2833 keypoint frames against 504 masks.
+    Nothing downstream can detect that, and every lumbar number computed from it
+    would have looked plausible.
     """
     import cv2 as _cv2
 
@@ -159,9 +168,15 @@ def extract_clip(
         end_s=end_s,
     )
     draw_cfg = cfg_get(cfg, "pose.draw")
+    downscale = max(1, int(cfg_get(cfg, "pose.mask_downscale")))
+    mask_shape = (
+        source.meta.out_height // downscale,
+        source.meta.out_width // downscale,
+    )
 
     all_kpts: list[np.ndarray] = []
     all_masks: list[np.ndarray] = []
+    mask_valid: list[bool] = []
     latencies: list[float] = []
     n_detected = 0
 
@@ -179,8 +194,13 @@ def extract_clip(
             latencies.append(result.latency_ms)
             if np.isfinite(result.kpts[:, :2]).any():
                 n_detected += 1
+            # One entry per frame, always -- see the docstring.
             if result.mask is not None:
                 all_masks.append(result.mask)
+                mask_valid.append(True)
+            else:
+                all_masks.append(np.zeros(mask_shape, dtype=np.uint8))
+                mask_valid.append(False)
 
             if preview_path is not None:
                 draw_skeleton(frame, result.kpts, vis_threshold=draw_cfg["vis_threshold"])
@@ -202,8 +222,9 @@ def extract_clip(
         ),
         "latency_ms": np.array(latencies, dtype=np.float32),
     }
-    if all_masks:
+    if any(mask_valid):
         payload["mask"] = np.stack(all_masks).astype(np.uint8)
+        payload["mask_valid"] = np.array(mask_valid, dtype=bool)
 
     out_npz = Path(out_npz)
     out_npz.parent.mkdir(parents=True, exist_ok=True)
@@ -214,6 +235,7 @@ def extract_clip(
         "npz": str(out_npz),
         "n_frames": int(kpts.shape[0]),
         "detection_rate": float(n_detected / max(1, kpts.shape[0])),
+        "mask_rate": float(sum(mask_valid) / max(1, len(mask_valid))),
         "fps": float(source.meta.fps),
         "frame_size": [source.meta.out_width, source.meta.out_height],
         "source_size": [source.meta.width, source.meta.height],
